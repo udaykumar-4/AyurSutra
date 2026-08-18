@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
+# Expo & Mobile Build Artifacts
+.expo/
+**/.expo/
+dist/
+web-build/
+*.apk
+*.aab
+*.ipa
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

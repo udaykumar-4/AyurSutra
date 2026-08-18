@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AyurSutra - Panchakarma Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+     
+    <div class="container">
+        <div class="header">
+            <h2>Welcome to <i class="fas fa-leaf" style="color:#43e97b"></i> AyurSutra</h2>
+            <h1>Panchakarma Management System</h1>
+            <p>Advanced Ayurvedic Treatment Management Platform</p>
+        </div>
+
+        <div class="login-container" id="roleSelection">
+            <h2 style="text-align: center; margin-bottom: 40px; color: #333; font-size: 2rem;">Select Your Role</h2>
+            <div class="role-selection">
+                <button class="role-card admin" onclick="showLogin('admin')">
+                    <h3>👩‍💼 Administrator</h3>
+                    <p>Manage users, schedules, analytics, and system settings with comprehensive oversight</p>
+                </button>
+                <button class="role-card doctor" onclick="showLogin('doctor')">
+                    <h3>👨‍⚕️ Doctor</h3>
+                    <p>Patient records, prescriptions, treatment plans, and medical consultations</p>
+                </button>
+                <button class="role-card therapist" onclick="showLogin('therapist')">
+                    <h3>🧘 Therapist</h3>
+                    <p>Therapy sessions, treatment execution, and patient progress tracking</p>
+                </button>
+                <button class="role-card receptionist" onclick="showLogin('receptionist')">
+                    <h3>🛎️ Receptionist</h3>
+                    <p>Patient check-in, walk-in registration, appointment scheduling, and bill settlement</p>
+                </button>
+                <button class="role-card patient" onclick="showLogin('patient')">
+                    <h3>🧑 Patient</h3>
+                    <p>Appointments, treatment progress, health records, and wellness tracking</p>
+                </button>
+            </div>
+        </div>
+
+        <div class="login-container" id="loginScreen">
+            <button class="back-btn" onclick="showRoleSelection()">← Back</button>
+            <div class="login-form">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;" id="loginTitle">Login</h2>
+                <div id="loginAlert"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">Email</label>
+                        <input type="email" id="username" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn" id="loginBtn">
+                        <span id="loginText">Login</span>
+                        <div class="loading" id="loginLoading" style="display: none;"></div>
+                    </button>
+                </form>
+
+                <div style="text-align: center; margin-top: 25px;">
+                    <p style="color: #6c757d;">Don't have an account? 
+                        <span style="color: #667eea; font-weight: 600; cursor: pointer;" onclick="triggerRegistration(event)">
+                            Register here
+                        </span>
+                    </p>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECEPTIONIST DASHBOARD -->
+        <div class="dashboard" id="receptionistDashboard">
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="avatar" id="receptionistAvatar">R</div>
+                    <div>
+                        <h3 id="receptionistName">Receptionist</h3>
+                        <p style="color: #6c757d;">Front Desk & Patient Management</p>
+                    </div>
+                </div>
+                <div class="time-display">
+                    <div class="current-time">11:30 AM</div>
+                    <div class="current-date">Saturday, Nov 15, 2025</div>
+                </div>
+                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="receptionistTodayAppts">0</h3>
+                    <p>Today's Appointments</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="receptionistPendingPayments">0</h3>
+                    <p>Pending Payments</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="receptionistTotalPatients">0</h3>
+                    <p>Total Patients</p>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab(event, 'receptionistAppointments')">Appointments & Booking</button>
+                <button class="nav-tab" onclick="showTab(event, 'receptionistRegister')">Register Walk-in Patient</button>
+            </div>
+
+            <!-- Tab 1: Appointments -->
+            <div class="tab-content active" id="receptionistAppointments">
+                <h3>Appointments Schedule</h3>
+                <button class="btn btn-small" onclick="showBookAppointmentModal()" style="margin: 20px 0;">📅 Book Appointment for Patient</button>
+                <div class="table-responsive-container">
+                    <table class="table" id="receptionistScheduleTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Doctor / Therapist</th>
+                                <th>Treatment</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receptionistScheduleBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: Walk-in Registration -->
+            <div class="tab-content" id="receptionistRegister">
+                <h3>Register New Walk-in Patient</h3>
+                <form onsubmit="registerWalkInPatient(event)" style="max-width: 500px; margin-top: 20px;">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="walkInName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="walkInEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Default Password</label>
+                        <input type="password" id="walkInPassword" value="patient123" required>
+                    </div>
+                    <button type="submit" class="btn">Register Patient</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div class="dashboard" id="adminDashboard">
+            
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="avatar" id="adminAvatar">A</div>
+                    <div>
+                        <h3 id="adminName">Administrator</h3>
+                        <p style="color: #6c757d;">System Overview & Management</p>
+                    </div>
+                </div>
+                <div class="time-display">
+                    <div class="current-time">11:30 AM</div>
+                    <div class="current-date">Saturday, Nov 15, 2025</div>
+                </div>
+                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="totalPatients">0</h3>
+                    <p>Total Patients</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="activeDoctors">0</h3>
+                    <p>Active Doctors</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="activeTherapists">0</h3>
+                    <p>Active Therapists</p>
+                </div>
+                 <div class="stat-card">
+                    <h3 id="todaySessions">0</h3>
+                    <p>Today's Sessions</p>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab(event, 'adminUsers')">User Management</button>
+                <button class="nav-tab" onclick="showTab(event, 'adminSchedule')">Schedule Overview</button>
+                <button class="nav-tab" onclick="showTab(event, 'adminReports')">Reports & Analytics</button>
+                <button class="nav-tab" onclick="showTab(event, 'adminSettings')">System Settings</button>
+            </div>
+
+            <div class="tab-content active" id="adminUsers">
+                <h3>User Management</h3>
+                <div class="filter-bar">
+                    <div class="filter-item">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">🔍 Search by Name or Email</label>
+                        <div class="search-box" style="margin-bottom: 0;">
+                            <input type="text" placeholder="Search users..." id="userSearch" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div class="filter-item" style="min-width: 180px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">👤 Filter by Role</label>
+                        <select id="roleFilter" style="width: 100%;">
+                            <option value="">All Roles</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="therapist">Therapist</option>
+                            <option value="patient">Patient</option>
+                            <option value="receptionist">Receptionist</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" style="min-width: 180px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">📊 Filter by Status</label>
+                        <select id="statusFilter" style="width: 100%;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <button class="btn btn-small" onclick="clearFilters()" style="background: #6c757d; margin-top: 25px;">🔄 Clear Filters</button>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div id="filterResults" style="color: #667eea; font-weight: 600;"></div>
+                    </div>
+                <div class="table-responsive-container">
+                    <table class="table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Last Login / Assigned Dr</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="adminSchedule">
+                <h3>Schedule Overview (All Appointments)</h3>
+                <div class="table-responsive-container">
+                    <table class="table" id="scheduleTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Therapist</th>
+                                <th>Treatment</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="adminReports">
+                <h3>Reports & Analytics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="adminReportTotalPatients">0</h3>
+                        <p>Total Patients</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="adminReportTreatmentsCompleted">0</h3>
+                        <p>Treatments Completed</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="adminReportTreatmentProgress">0%</h3>
+                        <p>Treatment Progress</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="adminReportNewRegistrations">0</h3>
+                        <p>New Registrations</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px; background: rgba(255,255,255,0.9); padding: 30px; border-radius: 15px;">
+                    <h3 style="margin-bottom: 20px;">Generate Patient Report</h3>
+                    <div class="form-group" style="max-width: 400px;">
+                        <label for="reportPatientInput" style="font-weight: 600;">Select Patient</label>
+                        <input type="text" id="reportPatientInput" list="patient-report-list" 
+                               placeholder="Type or select a patient..." 
+                               style="width: 100%; padding: 15px 20px; border: 2px solid #e1e5e9; border-radius: 12px; font-size: 1rem; background: rgba(255,255,255,0.9);">
+                        <datalist id="patient-report-list">
+                            </datalist>
+                    </div>
+                    <button class="btn btn-small"  style="margin-top: 15px;" onclick="generatePatientReport()">
+                        📄 Generate PDF Report
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-content" id="adminSettings">
+                <h3>System Settings (Demo)</h3>
+                <form onsubmit="event.preventDefault(); saveSettings();">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>System Name</label>
+                            <input type="text" value="Panchakarma Management System" id="systemName">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Notifications</label>
+                            <select id="emailNotifications">
+                                <option value="enabled">Enabled</option>
+                                <option value="disabled">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>SMS Notifications</label>
+                            <select id="smsNotifications">
+                                <option value="enabled">Enabled</option>
+                                <option value="disabled">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Backup Frequency</label>
+                            <select id="backupFrequency">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Session Duration (minutes)</label>
+                            <input type="number" value="60" min="30" max="180" id="sessionDuration">
+                        </div>
+                        <div class="form-group">
+                            <label>Working Hours</label>
+                            <input type="text" value="9:00 AM - 6:00 PM" id="workingHours">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-small">💾 Save Settings</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- DOCTOR DASHBOARD -->
+        <div class="dashboard" id="doctorDashboard">
+            
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="avatar" id="doctorAvatar">D</div>
+                    <div>
+                        <h3 id="doctorName">Doctor</h3>
+                        <p id="doctorDesignation" style="color: #6c757d;">Senior Ayurvedic Physician</p>
+                    </div>
+                </div>
+                 <div class="time-display">
+                    <div class="current-time">11:30 AM</div>
+                    <div class="current-date">Saturday, Nov 15, 2025</div>
+                </div>
+                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="doctorActivePatients">0</h3>
+                    <p>My Active Patients</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="doctorConsultations">0</h3>
+                    <p>Today's Consultations</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="doctorTreatmentsPrescribed">0</h3>
+                    <p>Treatments Prescribed</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="doctorSuccessRate">0%</h3>
+                    <p>Success Rate (Sample)</p>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab(event, 'doctorPatients')">Patient Records</button>
+                <button class="nav-tab" onclick="showTab(event, 'doctorPrescriptions')">Prescriptions</button>
+                <button class="nav-tab" onclick="showTab(event, 'doctorSchedule')">My Schedule</button>
+                <button class="nav-tab" onclick="showTab(event, 'doctorReports')">Treatment Reports</button>
+            </div>
+
+            <div class="tab-content active" id="doctorPatients">
+                <h3>Patient Records</h3>
+                <div class="search-box">
+                    <input type="text" placeholder="Search patients..." id="patientSearch">
+                </div>
+                <div class="table-responsive-container">
+                    <table class="table" id="patientsTable">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Age</th>
+                                <th>Condition</th>
+                                <th>Last Visit</th>
+                                <th>Treatment Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="doctorPrescriptions">
+                <h3>Prescriptions & Treatment Plans</h3>
+                <button class="btn btn-small" onclick="showCreatePrescriptionModal()">+ Create New Prescription</button>
+                <div class="table-responsive-container">
+                    <table class="table" id="prescriptionsTable">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Treatment</th>
+                                <th>Duration</th>
+                                <th>Assigned Therapist</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prescriptionsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="doctorSchedule">
+                <h3>My Schedule (Appointments)</h3>
+                <div class="table-responsive-container">
+                    <table class="table" id="doctorScheduleTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Treatment</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorScheduleBody"></tbody>
+                    </table>
+                </div>
+                <h3 style="margin-top: 30px;">Manage Availability</h3>
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+    <form onsubmit="addBlockedSlot(event)">
+        <div class="form-group">
+            <label>Date to Block</label>
+            <input type="date" id="blockDate" required>
+        </div>
+        <div class="form-group">
+            <label>Time to Block</label>
+            <select id="blockTime" required>
+                <option value="">Select Time</option>
+                <option value="09:00">9:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="12:00">12:00 PM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="15:00">3:00 PM</option>
+                <option value="16:00">4:00 PM</option>
+                <option value="17:00">5:00 PM</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-small" style="background: #dc3545;">Block Slot</button>
+    </form>
+    <div>
+        <label>Your Blocked Time Slots</label>
+        <div id="blockedSlotsList" style="max-height: 200px; overflow-y: auto; background: #f9f9f9; padding: 15px; border-radius: 10px;">
+            <p>No blocked slots found.</p>
+        </div>
+    </div>
+</div>
+            </div>
+
+            <div class="tab-content" id="doctorReports">
+                <h3>Treatment Reports (Sample)</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="doctorSuccessRateReport">0%</h3>
+                        <p>Treatment Success Rate</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="doctorPatientsTreated">0</h3>
+                        <p>Patients Treated This Month</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="doctorAvgRating">0/5</h3>
+                        <p>Average Patient Rating</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="doctorPendingFollowups">0</h3>
+                        <p>Pending Follow-ups</p>
+                    </div>
+                </div>
+                <button class="btn btn-small"  onclick="generatePDFReport()">📈 Generate Detailed Report</button>
+            </div>
+            
+                
+                <h4 style="margin-top: 30px;" hidden>Patient Feedback</h4>
+                <div id="doctorFeedbackDisplay" hidden style="max-height: 400px; overflow-y: auto;">
+                    <p hidden>Loading feedback...</p>
+                </div>
+        </div>
+
+        <!-- THERAPIST DASHBOARD -->
+        <div class="dashboard" id="therapistDashboard">
+            
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="avatar" id="therapistAvatar">T</div>
+                    <div>
+                        <h3 id="therapistName">Therapist</h3>
+                        <p id="therapistDesignation" style="color: #6c757d;">Certified Panchakarma Therapist</p>
+                    </div>
+                </div>
+                 <div class="time-display">
+                    <div class="current-time">11:30 AM</div>
+                    <div class="current-date">Saturday, Nov 15, 2025</div>
+                </div>
+                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="therapistTodaySessions">0</h3>
+                    <p>Today's Sessions</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="therapistCompleted">0</h3>
+                    <p>Completed Today</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="therapistRemaining">0</h3>
+                    <p>Remaining Today</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="therapistSatisfaction">0%</h3>
+                    <p>Patient Satisfaction (Sample)</p>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab(event, 'therapistSessions')">Today's Sessions</button>
+                <button class="nav-tab" onclick="showTab(event, 'therapistPatients')">My Assigned Patients</button>
+                <button class="nav-tab" onclick="showTab(event, 'therapistProgress')">Treatment Progress</button>
+            </div>
+
+            <div class="tab-content active" id="therapistSessions">
+                <h3>Today's Therapy Sessions</h3>
+                <div class="table-responsive-container">
+                    <table class="table" id="todaySessionsTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Treatment</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todaySessionsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="therapistPatients">
+                <h3>My Assigned Patients (via Prescriptions)</h3>
+                <div class="table-responsive-container">
+                    <table class="table" id="therapistPatientsTable">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Treatment Plan</th>
+                                <th>Progress</th>
+                                <th>Prescribed By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="therapistPatientsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="therapistProgress">
+                <h3>Treatment Progress Tracking</h3>
+                <div class="form-group" style="max-width: 300px;">
+                    <label>Select Patient</label>
+                    <select id="progressPatientSelect" onchange="loadPatientProgress()">
+                        <option value="">-- Select Patient --</option>
+                        </select>
+                </div>
+                <div id="patientProgressDetails">
+                    <p>Please select a patient to view their progress.</p>
+                </div>
+                <div class="form-group" style="margin-top: 30px;">
+                    <label>Add Progress Note</label>
+                    <textarea id="progressNote" placeholder="Enter treatment notes, patient response, and observations..." style="min-height: 120px;"></textarea>
+                </div>
+                <button class="btn btn-small" onclick="saveProgressNote()">💾 Save Progress Note</button>
+            </div>
+
+        </div>
+
+        <!-- PATIENT DASHBOARD -->
+        <div class="dashboard" id="patientDashboard">
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="avatar" id="patientAvatar">P</div>
+                    <div>
+                        <h3 id="patientName">Patient</h3>
+                        <p id="patientId" style="color: #6c757d;">Patient ID: #0000</p>
+                    </div>
+                </div>
+                 <div class="time-display">
+                    <div class="current-time">11:30 AM</div>
+                    <div class="current-date">Saturday, Nov 15, 2025</div>
+                </div>
+                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="stats-grid" id="patientStatsGrid">
+                <div class="stat-card">
+                    <h3>-</h3>
+                    <p>Treatment Progress</p>
+                </div>
+                <div class="stat-card">
+                    <h3>-</h3>
+                    <p>Next Appointment</p>
+                </div>
+                <div class="stat-card">
+                    <h3>-</h3>
+                    <p>Assigned Doctor</p>
+                </div>
+                <div class="stat-card">
+                    <h3>-</h3>
+                    <p>Primary Therapist</p>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab(event, 'patientAppointments')">My Appointments</button>
+                <button class="nav-tab" onclick="showTab(event, 'patientTreatment')">Treatment Plan</button>
+                <button class="nav-tab" onclick="showTab(event, 'patientHistory')">Medical History</button>
+                <button class="nav-tab" onclick="showTab(event, 'patientProfile')">Profile Settings</button>
+                <button class="nav-tab" onclick="showTab(event, 'patientPayments')">Payments</button>
+                <button class="nav-tab" onclick="showTab(event, 'patientFeedback')">My Feedback</button>
+            </div>
+
+            <div class="tab-content active" id="patientAppointments">
+                <h3>My Appointments</h3>
+                <button class="btn btn-small" onclick="showBookAppointmentModal()" style="margin: 20px 0;">📅 Book New Appointment</button>
+                <div class="table-responsive-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Treatment</th>
+                                <th>Staff</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientAppointmentsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="patientTreatment">
+                <h3>Current Treatment Plan</h3>
+                <div id="patientTreatmentPlan">
+                    <p>No active treatment plan found.</p>
+                </div>
+                
+                <h4>Recent Session Notes (Sample)</h4>
+                <div style="background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%); padding: 20px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #28a745;">
+                    <p><strong>Note:</strong> Patient reports 70% reduction in pain. Mobility significantly improved. Continue current treatment protocol.</p>
+                    <small style="color: #6c757d;">- (Sample Note)</small>
+                </div>
+            </div>
+
+            <div class="tab-content" id="patientHistory">
+                <h3>Medical History</h3>
+                <button class="btn btn-small" onclick="generateMyReport()" style="margin-bottom: 20px;">📄 Download My Full Report</button>
+                
+                <div class="table-responsive-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Treatment</th>
+                                <th>Duration</th>
+                                <th>Outcome</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>(Sample) Jan 2025</td>
+                                <td>Initial Consultation</td>
+                                <td>1 session</td>
+                                <td>Diagnosis: Vata-type Arthritis</td>
+                                <td>(Sample) Dr. Rajesh</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h4 style="margin-top: 30px;">Health Reports & Documents</h4>
+                <button class="btn btn-small" onclick="showUploadModal()" style="margin: 15px 0;">📎 Upload New Report</button>
+                <div style="background: rgba(255, 243, 205, 0.3); padding: 20px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                    <p><strong>(Sample) 📋 Blood Test:</strong> All parameters normal. <a href="#">Download</a></p>
+                    <small style="color: #6c757d;">Uploaded on Aug 28, 2025</small>
+                </div>
+
+                <h4 style="margin-top: 30px;">Vital Signs Tracking 
+                    <button onclick="showModal('editVitalsModal')" style="background: #667eea; color: white; border: none; border-radius: 5px; padding: 5px 15px; cursor: pointer; font-size: 14px; margin-left: 15px;">✏️ Edit Vitals</button>
+                </h4>
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <h3 id="patientBloodPressure">N/A</h3>
+                        <p>Blood Pressure</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="patientHeartRate">N/A bpm</h3>
+                        <p>Heart Rate</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="patientWeight">N/A kg</h3>
+                        <p>Weight</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="patientTemperature">N/A °F</h3>
+                        <p>Temperature</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="patientProfile">
+                <h3>Personal Profile</h3>
+                <form onsubmit="event.preventDefault(); updateProfile();">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="profileName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="profileEmail" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" id="profileAge" placeholder="e.g., 34">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                             <select id="profileGender">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" id="profileDob">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="profilePhone" placeholder="+91 9876543210">
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input type="text" id="profileAddress" placeholder="123 MG Road, Bangalore">
+                        </div>
+                        <div class="form-group">
+                            <label>Emergency Contact</label>
+                            <input type="text" id="profileEmergencyContact" placeholder="Ravi Singh - +91 9876543211">
+                        </div>
+                        <div class="form-group">
+                            <label>Blood Group</label>
+                            <input type="text" id="profileBloodGroup" placeholder="O+">
+                        </div>
+                        <div class="form-group">
+                            <label>Allergies</label>
+                            <input type="text" id="profileAllergies" placeholder="None known">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-small">💾 Update Profile</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="patientPayments">
+                <h3>Pending Payments</h3>
+                <p>These are completed treatments that have not been paid for.</p>
+                <div id="payment-list">
+                    </div>
+            </div>
+            <div class="tab-content" id="patientFeedback">
+                <h3>Submit Feedback</h3>
+                <p>We value your opinion! Please let us know how we did.</p>
+                <form id="feedbackForm" onsubmit="submitFeedback(event)">
+                    
+                    <div id="doctorFeedbackSection" style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <h4 id="doctorFeedbackName">Doctor Feedback</h4>
+                        <div class="form-group">
+                            <label>Doctor Rating (1-5)</label>
+                            <select id="doctorRating">
+                                <option value="">-- Select Rating --</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                                <option value="4">⭐⭐⭐⭐ (Good)</option>
+                                <option value="3">⭐⭐⭐ (Average)</option>
+                                <option value="2">⭐⭐ (Poor)</option>
+                                <option value="1">⭐ (Very Poor)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Doctor Feedback</label>
+                            <textarea id="doctorFeedbackText" placeholder="How was your experience with the doctor?"></textarea>
+                        </div>
+                    </div>
+
+                    <div id="therapistFeedbackSection" style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <h4 id="therapistFeedbackName">Therapist Feedback</h4>
+                        <div class="form-group">
+                            <label>Therapist Rating (1-5)</label>
+                            <select id="therapistRating">
+                                <option value="">-- Select Rating --</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                                <option value="4">⭐⭐⭐⭐ (Good)</option>
+                                <option value="3">⭐⭐⭐ (Average)</option>
+                                <option value="2">⭐⭐ (Poor)</option>
+                                <option value="1">⭐ (Very Poor)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Therapist Feedback</label>
+                            <textarea id="therapistFeedbackText" placeholder="How was your experience with your therapist?"></textarea>
+                        </div>
+                    </div>
+
+                    <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <h4>Overall Experience</h4>
+                        <div class="form-group">
+                            <label>Overall Rating (1-5)</label>
+                            <select id="overallRating" required>
+                                <option value="">-- Select Rating --</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                                <option value="4">⭐⭐⭐⭐ (Good)</option>
+                                <option value="3">⭐⭐⭐ (Average)</option>
+                                <option value="2">⭐⭐ (Poor)</option>
+                                <option value="1">⭐ (Very Poor)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Overall Feedback</label>
+                            <textarea id="overallFeedbackText" placeholder="Any other comments about your experience?"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" style="margin-top: 20px;">Submit Feedback</button>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="modal" id="notesModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('notesModal')">&times;</button>
+                <h3>Patient Treatment Notes</h3>
+                <input type="hidden" id="notesPatientId">
+                <div id="notesContent"></div>
+                <div class="form-group">
+                    <label>Add New Note</label>
+                    <textarea id="newNote" placeholder="Enter treatment observations, patient feedback, recommendations..." style="min-height: 100px;"></textarea>
+                </div>
+                <button class="btn btn-small" onclick="saveNote()">Save Note</button>
+            </div>
+        </div>
+
+        <div class="modal" id="bookAppointmentModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('bookAppointmentModal')">&times;</button>
+                <h3>Book New Appointment</h3>
+                <form onsubmit="bookAppointment(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Treatment Type</label>
+                            <select id="treatmentType" required onchange="toggleAppointmentFields()">
+                                <option value="">Select Treatment</option>
+                                <option value="Abhyanga">Abhyanga (Full Body Massage)</option>
+                                <option value="Shirodhara">Shirodhara (Oil Pouring)</option>
+                                <option value="Swedana">Swedana (Steam Therapy)</option>
+                                <option value="Pizhichil">Pizhichil (Oil Bath)</option>
+                                <option value="Consultation">Doctor Consultation</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Date</label>
+                            <input type="date" id="appointmentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Time</label>
+                            <select id="appointmentTime" required>
+                                <option value="">Select Time</option>
+                                <option value="09:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="14:00">2:00 PM</option>
+                                <option value="15:00">3:00 PM</option>
+                                <option value="16:00">4:00 PM</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="therapist-select-group">
+                            <label>Preferred Therapist</label>
+                            <select id="preferredTherapist">
+                                <option value="">No Preference</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="doctor-select-group" style="display: none;">
+                            <label>Select Doctor</label>
+                            <select id="preferredDoctor">
+                                <option value="">-- Select a Doctor --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Special Requirements</label>
+                        <textarea id="specialRequirements" placeholder="Any special requirements or notes..."></textarea>
+                    </div>
+                    <button type="submit" class="btn">Book Appointment</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="editUserModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('editUserModal')">&times;</button>
+                <h3>Edit User</h3>
+                <form onsubmit="saveUserEdit(event)">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="editUserName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="editUserEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="editUserPhone">
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="editUserRole" required>
+                                <option value="doctor">Doctor</option>
+                                <option value="therapist">Therapist</option>
+                                <option value="patient">Patient</option>
+                                <option value="receptionist">Receptionist</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="editUserStatus" required>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Designation</label>
+                            <input type="text" id="editUserDesignation">
+                        </div>
+                        </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="submit" class="btn">Save Changes</button>
+                        <button type="button" class="btn" style="background: #dc3545;" onclick="deleteUser()">Delete User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="patientDetailsModal">
+            <div class="modal-content" style="max-width: 900px;">
+                <button class="modal-close" onclick="closeModal('patientDetailsModal')">&times;</button>
+                <h3>Patient Details</h3>
+                <div id="patientDetailsContent"></div>
+            </div>
+        </div>
+
+        <div class="modal" id="createPrescriptionModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('createPrescriptionModal')">&times;</button>
+                <h3>Create New Prescription</h3>
+                <form onsubmit="savePrescription(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Patient</label>
+                            <select id="prescriptionPatient" required>
+                                <option value="">Select Patient</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Treatment</label>
+                            <input type="text" id="prescriptionTreatment" required placeholder="e.g., Abhyanga + Swedana">
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (days)</label>
+                            <input type="number" id="prescriptionDuration" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Assigned Therapist</label>
+                            <select id="prescriptionTherapist" required>
+                                <option value="">Select Therapist</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Treatment Plan</label>
+                        <textarea id="prescriptionPlan" placeholder="Detailed treatment plan..." style="min-height: 100px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="prescriptionNotes" placeholder="Additional notes..." style="min-height: 80px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn">Create Prescription</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="editProgressModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('editProgressModal')">&times;</button>
+                <h3>Update Treatment Progress</h3>
+                <form onsubmit="saveProgress(event)">
+                    <input type="hidden" id="progressPrescriptionId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Completed Sessions</label>
+                            <input type="number" id="progressCompleted" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Sessions</label>
+                            <input type="number" id="progressTotal" required min="1" readonly>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Update Progress</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="uploadReportModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('uploadReportModal')">&times;</button>
+        <h3>Upload Medical Report</h3>
+        <form onsubmit="uploadReport(event)">
+            <div class="form-group">
+                <label>Report Name</label>
+                <input type="text" id="reportName" required placeholder="e.g., Blood Test Report">
+            </div>
+            <div class="form-group">
+                <label>Report Type</label>
+                <select id="reportType" required>
+                    <option value="">Select Type</option>
+                    <option value="Blood Test">Blood Test</option>
+                    <option value="X-Ray">X-Ray</option>
+                    <option value="MRI">MRI</option>
+                    <option value="Prescription">Prescription</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Select File (PDF, JPG, PNG)</label>
+                <input type="file" id="reportFile" accept=".pdf,.jpg,.jpeg,.png" required>
+            </div>
+            <button type="submit" class="btn">Upload Report</button>
+        </form>
+    </div>
+</div>
+
+        <div class="modal" id="editVitalsModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('editVitalsModal')">&times;</button>
+                <h3>Update Vital Signs</h3>
+                <form onsubmit="saveVitals(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Heart Rate (bpm)</label>
+                            <input type="number" id="vitalHeartRate" placeholder="72">
+                        </div>
+                        <div class="form-group">
+                            <label>Blood Pressure</label>
+                            <input type="text" id="vitalBloodPressure" placeholder="120/80">
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" step="0.1" id="vitalWeight" placeholder="65">
+                        </div>
+                        <div class="form-group">
+                            <label>Height (cm)</label>
+                            <input type="number" id="vitalHeight" placeholder="165">
+                        </div>
+                        <div class="form-group">
+                            <label>Temperature (°F)</label>
+                            <input type="number" step="0.1" id="vitalTemperature" placeholder="98.6">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Save Vitals</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="sessionDetailsModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('sessionDetailsModal')">&times;</button>
+                <h3>Session Details</h3>
+                <div id="sessionDetailsContent"></div>
+            </div>
+        </div>
+
+        <div class="notification" id="notification">
+            <div class="notification-title" id="notificationTitle"></div>
+            <div class="notification-message" id="notificationMessage"></div>
+        </div>
+
+        <div class="modal" id="registrationFormModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal('registrationFormModal')">✖</button>
+                <h3 style="margin-bottom: 20px;">Create Account</h3>
+                <form id="registrationForm" onsubmit="submitRegistration(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="regName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="regEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="regPassword" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="regRole" required>
+                                <option value="admin">Admin</option>
+                                <option value="doctor">Doctor</option>
+                                <option value="therapist">Therapist</option>
+                                <option value="patient">Patient</option>
+                                <option value="receptionist">Receptionist</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" style="max-width: 240px;">Create Account</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="modal" id="paymentModal">
+            <div class="modal-content" style="text-align: center;">
+                <button class="modal-close" onclick="closeModal('paymentModal')">&times;</button>
+                <h3>Complete Your Payment</h3>
+                <p>Please scan the QR code with your preferred UPI app.</p>
+                <p style="font-size: 1.5rem; font-weight: bold; color: #667eea;" id="paymentAmount"></p>
+                
+                <img src="https://i.imgur.com/g2yXhS3.png" alt="Generic UPI QR Code" style="width: 250px; height: 250px; margin: 20px auto; border: 1px solid #ccc;">
+                
+                <p style="font-size: 0.9rem; color: #6c757d;">After payment, please click below to confirm.</p>
+                
+                <button class="btn" id="confirmPaymentBtn">I Have Completed the Payment</button>
+            </div>
+        </div>
+
+        <div class="modal" id="pdfPreviewModal">
+            <div class="modal-content" style="max-width: 90vw; width: 1000px; height: 90vh; padding: 0; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #f8f9fa; border-bottom: 1px solid #eee;">
+                    <h3 style="margin: 0;" id="pdfPreviewTitle">Patient Report</h3>
+                    <div>
+                        <button class="btn btn-small" id="pdfPrintBtn" style="margin-right: 10px;">🖨️ Print</button>
+                        <button class="btn btn-small" id="pdfSaveBtn" style="background: #28a745; margin-right: 20px;">💾 Save PDF</button>
+                        <button class="modal-close" style="position: static; font-size: 1.2rem;" onclick="closeModal('pdfPreviewModal')">&times;</button>
+                    </div>
+                </div>
+                <div style="flex-grow: 1; overflow: hidden;">
+                    <iframe id="pdfPreviewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="receiptModal">
+            <div class="modal-content" id="receiptContent">
+                <div id="printableReceipt">
+                    <div style="text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 20px;">
+                        <h2 style="margin: 0;"><i class="fas fa-leaf" style="color:#43e97b"></i> AyurSutra</h2>
+                        <p style="margin: 0; font-size: 1.1rem;">Payment Receipt</p>
+                    </div>
+                    <h3 id="receiptTitle" style="text-align: center; margin-bottom: 25px;"></h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px;">
+                        <div><strong>Patient:</strong> <span id="receiptPatientName"></span></div>
+                        <div><strong>Treatment:</strong> <span id="receiptTreatment"></span></div>
+                        <div><strong>Date:</strong> <span id="receiptDate"></span></div>
+                        <div><strong>Billed by:</strong> <span id="receiptStaffName"></span></div>
+                    </div>
+                    
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    
+                    <div style="display: flex; justify-content: flex-end; text-align: right;">
+                        <div>
+                            <div style="font-size: 1.1rem;">Amount: <span id="receiptAmount"></span></div>
+                            <div style="font-size: 1.4rem; font-weight: bold; color: #28a745; margin-top: 5px;">
+                                STATUS: <span id="receiptStatus"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; font-size: 0.8rem; color: #999; text-align: center;">
+                        <p>Receipt ID: <span id="receiptId"></span></p>
+                        <p>Thank you for choosing AyurSutra!</p>
+                    </div>
+                </div>
+                
+                <div class="receipt-actions" style="text-align: right; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <button class="btn btn-small" style="background: #6c757d;" onclick="closeModal('receiptModal')">Close</button>
+                    <button class="btn btn-small" style="margin-left: 10px;" onclick="printReceipt()">🖨️ Print</button>
+                </div>
+            </div>
+        </div>
+
+    </div> <script src="js/script.js" defer></script>
+</body>
+</html>
