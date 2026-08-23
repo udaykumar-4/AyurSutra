@@ -115,12 +115,18 @@ export default function AdminAppointmentsScreen() {
       <Header title="All Appointments" subtitle="System-wide Scheduling Management" showLogout={true} />
 
       {/* Filter Chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterRowContainer}
+        contentContainerStyle={styles.filterRowContent}
+      >
         {['all', 'scheduled', 'in-progress', 'completed', 'cancelled'].map((status) => (
           <TouchableOpacity
             key={status}
             style={[styles.filterChip, filterStatus === status && styles.activeFilterChip]}
             onPress={() => setFilterStatus(status)}
+            activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, filterStatus === status && styles.activeFilterChipText]}>
               {status.toUpperCase()}
@@ -215,27 +221,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  filterRow: {
+  filterRowContainer: {
+    flexGrow: 0,
+    maxHeight: 52,
+    marginVertical: 6,
+  },
+  filterRowContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
   },
   filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginRight: 6,
+    marginRight: 8,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 36,
   },
   activeFilterChip: {
     backgroundColor: Colors.secondary,
     borderColor: Colors.secondary,
   },
   filterChipText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.textSecondary,
+    textAlign: 'center',
   },
   activeFilterChipText: {
     color: Colors.white,

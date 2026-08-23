@@ -129,19 +129,25 @@ export default function PatientAppointmentsScreen() {
       </View>
 
       {/* Filter Tabs */}
-      <View style={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterRowContainer}
+        contentContainerStyle={styles.filterRowContent}
+      >
         {['all', 'today', 'upcoming', 'scheduled', 'completed', 'cancelled'].map((status) => (
           <TouchableOpacity
             key={status}
             style={[styles.filterChip, filterStatus === status && styles.activeFilterChip]}
             onPress={() => setFilterStatus(status)}
+            activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, filterStatus === status && styles.activeFilterChipText]}>
               {status.toUpperCase()}
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -302,28 +308,38 @@ const styles = StyleSheet.create({
   bookBtn: {
     width: '100%',
   },
-  filterRow: {
+  filterRowContainer: {
+    flexGrow: 0,
+    maxHeight: 52,
+    marginVertical: 6,
+  },
+  filterRowContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
   },
   filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
     marginRight: 8,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 36,
   },
   activeFilterChip: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   filterChipText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.textSecondary,
+    textAlign: 'center',
   },
   activeFilterChipText: {
     color: Colors.white,
