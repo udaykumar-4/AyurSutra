@@ -49,7 +49,7 @@ export default function AdminMoreScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="System Settings" subtitle="Admin Profile & Server Environment" showLogout={false} />
+      <Header title="Admin Controls" subtitle="System Configuration & Management" showLogout={true} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Admin Profile Settings */}

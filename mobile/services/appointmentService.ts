@@ -1,18 +1,41 @@
 import apiClient from '../api/client';
 import { Appointment, CreateAppointmentPayload, AppointmentStatus } from '../types/appointment';
 
+export interface SlotAvailability {
+  time: string;
+  start: string;
+  end?: string;
+  status: 'available' | 'booked' | 'blocked' | 'leave' | 'past';
+}
+
+export interface ProviderAvailabilityResponse {
+  date: string;
+  providerId: string;
+  providerType: string;
+  providerName: string;
+  slots: SlotAvailability[];
+}
+
 export const appointmentService = {
-  getAppointments: async (filters?: { patientId?: string; doctorId?: string; therapistId?: string }): Promise<Appointment[]> => {
+  getAppointments: async (filters?: { patientId?: string; doctorId?: string; therapistId?: string; category?: string }): Promise<Appointment[]> => {
     let query = '';
     if (filters) {
       const params = new URLSearchParams();
       if (filters.patientId) params.append('patientId', filters.patientId);
       if (filters.doctorId) params.append('doctorId', filters.doctorId);
       if (filters.therapistId) params.append('therapistId', filters.therapistId);
+      if (filters.category) params.append('category', filters.category);
       const str = params.toString();
       if (str) query = `?${str}`;
     }
     const response = await apiClient.get<Appointment[]>(`/appointments${query}`);
+    return response.data;
+  },
+
+  getAvailability: async (providerId: string, providerType: 'doctor' | 'therapist', date: string): Promise<ProviderAvailabilityResponse> => {
+    const response = await apiClient.get<ProviderAvailabilityResponse>(
+      `/appointments/availability?providerId=${providerId}&providerType=${providerType}&date=${date}`
+    );
     return response.data;
   },
 

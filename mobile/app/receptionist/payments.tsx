@@ -98,7 +98,7 @@ export default function ReceptionistPaymentsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Billing & Payment Desk" subtitle="Cashier Settlement & Fee Collection" showLogout={false} />
+      <Header title="Billing & Payments" subtitle="Collection & Receipts" showLogout={true} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

@@ -128,7 +128,7 @@ export default function DoctorPrescriptionsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Prescriptions & Protocols" subtitle="Issued Treatment Plans" showLogout={false} />
+      <Header title="Treatment Plans" subtitle="Prescriptions & Panchakarma Plans" showLogout={true} />
 
       <View style={styles.topBar}>
         <Button

@@ -139,7 +139,7 @@ export default function ReceptionistPatientsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Patient Management" subtitle="Patient Directory & Walk-in Registration" showLogout={false} />
+      <Header title="Patient Directory" subtitle="Patient Registration & Records" showLogout={true} />
 
       <View style={styles.topActionContainer}>
         <Button

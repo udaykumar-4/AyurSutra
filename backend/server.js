@@ -49,8 +49,16 @@ mongoose.connect(MONGO_URI)
   .then(async () => {
     console.log('Connected to MongoDB');
     await seedDemoUsers();
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`⚠️ Port ${PORT} is already in use by another process.`);
+        console.error(`👉 To free port ${PORT} on Windows PowerShell, run: npx kill-port ${PORT}`);
+      } else {
+        console.error('Server error:', err);
+      }
     });
   })
   .catch((err) => {

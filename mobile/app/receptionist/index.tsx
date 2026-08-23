@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
 import userService from '../../services/userService';
@@ -18,6 +18,7 @@ import StatCard from '../../components/StatCard';
 import Card from '../../components/Card';
 import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
+import { filterTodayAppointments, filterUpcomingAppointments } from '../../utils/appointmentDateUtils';
 
 export default function ReceptionistDashboardScreen() {
   const { user, isLoading: authLoading } = useAuth();
@@ -30,11 +31,13 @@ export default function ReceptionistDashboardScreen() {
   const [error, setError] = useState<string | null>(null);
 
   // Protected Route Check
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'receptionist')) {
-      router.replace('/login');
-    }
-  }, [user, authLoading]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading && (!user || user.role !== 'receptionist')) {
+        router.replace('/login');
+      }
+    }, [user, authLoading])
+  );
 
   const fetchData = async () => {
     if (!user) return;
@@ -54,11 +57,13 @@ export default function ReceptionistDashboardScreen() {
     }
   };
 
-  useEffect(() => {
-    if (user && user.role === 'receptionist') {
-      fetchData();
-    }
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user && user.role === 'receptionist') {
+        fetchData();
+      }
+    }, [user])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -69,21 +74,12 @@ export default function ReceptionistDashboardScreen() {
     return <LoadingScreen message="Loading Front-Desk Desk Portal..." />;
   }
 
-  // Calculate Metrics
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayAppts = appointments.filter((a) => {
-    const dStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    return dStr === todayStr && a.status !== 'cancelled';
-  });
-
-  const upcomingAppts = appointments.filter((a) => {
-    const dStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    return dStr > todayStr && a.status !== 'cancelled';
-  });
+  // Calculate Metrics using shared timezone-safe date utils
+  const todayAppts = filterTodayAppointments(appointments, true);
+  const upcomingAppts = filterUpcomingAppointments(appointments, true);
 
   const pendingPayments = appointments.filter((a) => !a.isPaid && a.status !== 'cancelled');
   const completedAppts = appointments.filter((a) => a.status === 'completed');
-  const cancelledAppts = appointments.filter((a) => a.status === 'cancelled');
 
   return (
     <View style={styles.container}>

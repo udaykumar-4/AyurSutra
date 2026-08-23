@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
 import prescriptionService from '../../services/prescriptionService';
@@ -20,6 +20,7 @@ import Card from '../../components/Card';
 import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
 import OutcomeAnalyticsCard from '../../components/OutcomeAnalyticsCard';
+import { filterTodayAppointments, filterUpcomingAppointments } from '../../utils/appointmentDateUtils';
 
 export default function TherapistHomeScreen() {
   const { user, isLoading: authLoading } = useAuth();
@@ -32,11 +33,13 @@ export default function TherapistHomeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   // Protected Route Check
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'therapist')) {
-      router.replace('/login');
-    }
-  }, [user, authLoading]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading && (!user || user.role !== 'therapist')) {
+        router.replace('/login');
+      }
+    }, [user, authLoading])
+  );
 
   const fetchData = async () => {
     if (!user) return;
@@ -56,11 +59,13 @@ export default function TherapistHomeScreen() {
     }
   };
 
-  useEffect(() => {
-    if (user && user.role === 'therapist') {
-      fetchData();
-    }
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user && user.role === 'therapist') {
+        fetchData();
+      }
+    }, [user])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -71,17 +76,9 @@ export default function TherapistHomeScreen() {
     return <LoadingScreen message="Loading Panchakarma Therapy Queue..." />;
   }
 
-  // Filter Session Metrics
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todaySessions = appointments.filter((a) => {
-    const dStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    return dStr === todayStr && a.status !== 'cancelled';
-  });
-
-  const upcomingSessions = appointments.filter((a) => {
-    const dStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    return dStr > todayStr && a.status !== 'cancelled';
-  });
+  // Filter Session Metrics using shared timezone-safe date utils
+  const todaySessions = filterTodayAppointments(appointments, true);
+  const upcomingSessions = filterUpcomingAppointments(appointments, true);
 
   const activeTreatments = prescriptions.filter((p) => p.status === 'in-progress');
   const completedTreatments = prescriptions.filter((p) => p.status === 'completed');

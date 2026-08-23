@@ -41,8 +41,8 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
     if (visible && messages.length === 0) {
       const welcomeText =
         userRole === 'patient'
-          ? `Namaste ${userName || ''}! 🌿 I am your AyurSutra AI Wellness Assistant. I can guide you on Ayurvedic diets, therapy care, and your active treatment plan.`
-          : `Hello ${userName || ''}! 🤖 I am your AyurSutra AI Assistant. Ask me about Ayurvedic clinical literature, treatment protocols, or operational workflows.`;
+          ? `Namaste ${userName || ''}! 🌿 I am your AyurSutra Assistant. Powered by AyurSutra's curated knowledge engine. I can guide you on Ayurvedic diets, Panchakarma therapy preparation, aftercare, and your active treatment plan.`
+          : `Hello ${userName || ''}! 🌿 I am your AyurSutra Assistant. Powered by AyurSutra's curated knowledge engine. Ask me about Ayurvedic knowledge, treatment protocols, or clinic operational guidance.`;
 
       setMessages([
         {
@@ -59,7 +59,6 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
     const query = (textToSend || inputText).trim();
     if (!query || loading) return;
 
-    // Add user message immediately
     const userMsg: ChatMessage = {
       sender: 'user',
       text: query,
@@ -87,7 +86,7 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      setError(err.message || 'Failed to connect to AI Assistant service.');
+      setError(err.message || 'Failed to connect to AyurSutra Assistant.');
     } finally {
       setLoading(false);
       setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
@@ -117,7 +116,7 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
       ? [
           'What diet should I follow for my active therapy?',
           'How do I prepare for my Panchakarma session?',
-          'What are the benefits of Abhyanga therapy?',
+          'What are the benefits of Ashwagandha?',
         ]
       : [
           'Summarize standard Panchakarma aftercare protocols.',
@@ -135,12 +134,8 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
           <View style={styles.headerRow}>
             <Text style={styles.headerIcon}>🌿</Text>
             <View style={styles.headerTitleContainer}>
-              <Text style={styles.modalTitle}>AyurSutra AI Assistant</Text>
-              <Text style={styles.modalSubtitle}>
-                {userRole === 'patient'
-                  ? 'Personalized Wellness & Therapy Guidance'
-                  : 'Professional Clinical & Operational Assistant'}
-              </Text>
+              <Text style={styles.modalTitle}>AyurSutra Assistant</Text>
+              <Text style={styles.modalSubtitle}>Powered by AyurSutra's Curated Knowledge Engine</Text>
             </View>
             <TouchableOpacity onPress={handleClearHistory} style={styles.clearBtn}>
               <Text style={styles.clearBtnText}>🗑️</Text>
@@ -153,7 +148,7 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
           {/* Clinical Disclaimer Banner */}
           <View style={styles.disclaimerBanner}>
             <Text style={styles.disclaimerText}>
-              ⚠️ Educational AI Assistant • Not a Doctor. Consult your physician for medical decisions.
+              ⚠️ Educational & Wellness Support • Not a Doctor. Clinician verification required.
             </Text>
           </View>
 
@@ -173,7 +168,7 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
               >
                 {item.isPersonalized && (
                   <View style={styles.personalBadge}>
-                    <Text style={styles.personalBadgeText}>💡 Personal AyurSutra Record Used</Text>
+                    <Text style={styles.personalBadgeText}>💡 Personalized using your AyurSutra record</Text>
                   </View>
                 )}
                 <Text
@@ -190,7 +185,7 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
             {loading && (
               <View style={[styles.messageBubble, styles.assistantBubble, styles.loadingBubble]}>
                 <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.loadingText}>AI Assistant is thinking...</Text>
+                <Text style={styles.loadingText}>Searching AyurSutra knowledge base...</Text>
               </View>
             )}
 

@@ -131,7 +131,7 @@ export default function DoctorMoreScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="More Operations" subtitle="Feedback, Availability & Settings" showLogout={false} />
+      <Header title="Doctor Profile & Settings" subtitle="Account & Clinic Settings" showLogout={true} />
 
       {/* Segmented Control Bar */}
       <View style={styles.tabBar}>

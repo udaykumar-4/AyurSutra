@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
 import { Appointment, AppointmentStatus } from '../../types/appointment';
@@ -18,6 +18,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
+import { categorizeAppointmentDate } from '../../utils/appointmentDateUtils';
 
 export default function TherapistScheduleScreen() {
   const { user, isLoading: authLoading } = useAuth();
@@ -31,11 +32,13 @@ export default function TherapistScheduleScreen() {
   const [filterTab, setFilterTab] = useState<'today' | 'upcoming' | 'all'>('today');
 
   // Protected Route Check
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'therapist')) {
-      router.replace('/login');
-    }
-  }, [user, authLoading]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading && (!user || user.role !== 'therapist')) {
+        router.replace('/login');
+      }
+    }, [user, authLoading])
+  );
 
   const fetchData = async () => {
     if (!user) return;
@@ -51,11 +54,13 @@ export default function TherapistScheduleScreen() {
     }
   };
 
-  useEffect(() => {
-    if (user && user.role === 'therapist') {
-      fetchData();
-    }
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user && user.role === 'therapist') {
+        fetchData();
+      }
+    }, [user])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -79,18 +84,16 @@ export default function TherapistScheduleScreen() {
     return <LoadingScreen message="Loading Therapy Schedule..." />;
   }
 
-  const todayStr = new Date().toISOString().split('T')[0];
-
   const filteredAppts = appointments.filter((a) => {
-    const dStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    if (filterTab === 'today') return dStr === todayStr;
-    if (filterTab === 'upcoming') return dStr > todayStr;
+    const cat = categorizeAppointmentDate(a.appointment_date);
+    if (filterTab === 'today') return cat === 'TODAY';
+    if (filterTab === 'upcoming') return cat === 'UPCOMING';
     return true;
   });
 
   return (
     <View style={styles.container}>
-      <Header title="Therapy Schedule" subtitle="Session Appointments & Status Controls" showLogout={false} />
+      <Header title="Daily Therapy Schedule" subtitle="Session Timings & Appointments" showLogout={true} />
 
       {/* Segmented Filter Bar */}
       <View style={styles.tabBar}>

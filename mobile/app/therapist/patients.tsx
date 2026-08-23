@@ -137,7 +137,7 @@ export default function TherapistPatientsScreen() {
       <Header
         title="My Assigned Patients"
         subtitle="Patients Under Your Therapy Care"
-        showLogout={false}
+        showLogout={true}
       />
 
       <ScrollView

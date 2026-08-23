@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
 import prescriptionService from '../../services/prescriptionService';
@@ -23,6 +23,7 @@ import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
 import OutcomeAnalyticsCard from '../../components/OutcomeAnalyticsCard';
 import AIChatbotModal from '../../components/AIChatbotModal';
+import { filterTodayAppointments, filterUpcomingAppointments } from '../../utils/appointmentDateUtils';
 
 export default function PatientHomeScreen() {
   const { user, isLoading: authLoading } = useAuth();
@@ -39,11 +40,13 @@ export default function PatientHomeScreen() {
   const [showChatModal, setShowChatModal] = useState(false);
 
   // Protected Route Check
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'patient')) {
-      router.replace('/login');
-    }
-  }, [user, authLoading]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading && (!user || user.role !== 'patient')) {
+        router.replace('/login');
+      }
+    }, [user, authLoading])
+  );
 
   const fetchData = async () => {
     if (!user) return;
@@ -76,11 +79,13 @@ export default function PatientHomeScreen() {
     }
   };
 
-  useEffect(() => {
-    if (user && user.role === 'patient') {
-      fetchData();
-    }
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user && user.role === 'patient') {
+        fetchData();
+      }
+    }, [user])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -91,17 +96,9 @@ export default function PatientHomeScreen() {
     return <LoadingScreen message="Welcome to AyurSutra..." />;
   }
 
-  // Filter Today's & Upcoming Appointments
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayAppts = appointments.filter((a) => {
-    const apptStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    return apptStr === todayStr && a.status !== 'cancelled';
-  });
-
-  const upcomingAppts = appointments.filter((a) => {
-    const apptStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    return apptStr > todayStr && a.status !== 'cancelled';
-  });
+  // Filter Today's & Upcoming Appointments using timezone-safe date utils
+  const todayAppts = filterTodayAppointments(appointments, true);
+  const upcomingAppts = filterUpcomingAppointments(appointments, true);
 
   const activeRx = prescriptions.find((p) => p.status === 'in-progress') || prescriptions[0];
   const therapistName = activeRx && typeof activeRx.therapistId === 'object' ? activeRx.therapistId.full_name : 'Assigned Therapist';

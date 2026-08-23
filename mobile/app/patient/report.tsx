@@ -74,7 +74,7 @@ export default function PatientReportScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="My Health Summary" subtitle="Comprehensive Medical Chart Report" showLogout={false} />
+      <Header title="My Medical Report" subtitle="Health Summary & Discharge Record" showLogout={true} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

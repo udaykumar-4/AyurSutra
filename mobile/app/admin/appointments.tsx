@@ -112,7 +112,7 @@ export default function AdminAppointmentsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Master Appointments" subtitle="Operational Schedule & System Controls" showLogout={false} />
+      <Header title="All Appointments" subtitle="System-wide Scheduling Management" showLogout={true} />
 
       {/* Filter Chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>

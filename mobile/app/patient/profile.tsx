@@ -101,7 +101,7 @@ export default function PatientProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="My Profile & Settings" subtitle="Personal & Health Details" showLogout={false} />
+      <Header title="My Profile" subtitle="Account & Health Summary" showLogout={true} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Personal Details */}

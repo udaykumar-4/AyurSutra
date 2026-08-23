@@ -1,13 +1,11 @@
-const GeminiAIProvider = require('./providers/GeminiAIProvider');
+const AyurSutraKnowledgeProvider = require('./providers/AyurSutraKnowledgeProvider');
 const ChatConversation = require('../../models/chatConversation');
 const AIAuditLog = require('../../models/aiAuditLog');
 const User = require('../../models/user');
 const Prescription = require('../../models/prescription');
 const Appointment = require('../../models/appointment');
 
-const aiProvider = new GeminiAIProvider();
-
-// In-Memory Rate Limiting Tracker (userId -> array of timestamps)
+const aiProvider = new AyurSutraKnowledgeProvider();
 const userRateLimits = new Map();
 
 class ChatbotService {
@@ -32,20 +30,7 @@ class ChatbotService {
   }
 
   /**
-   * Detect Emergency Symptoms
-   */
-  detectEmergencyKeywords(text) {
-    const emergencyKeywords = [
-      'chest pain', 'heart attack', 'cannot breathe', 'severe breathing',
-      'unconscious', 'fainted', 'heavy bleeding', 'severe allergic reaction', 'anaphylaxis'
-    ];
-
-    const lower = text.toLowerCase();
-    return emergencyKeywords.some(kw => lower.includes(kw));
-  }
-
-  /**
-   * Main Chat Processor
+   * Main Chat Processor (Self-contained, 100% Offline AyurSutra Intelligent Guidance Engine)
    */
   async processChatMessage(user, messageText, conversationId = null) {
     // 1. Rate Limiting Check
@@ -72,24 +57,10 @@ class ChatbotService {
       };
     }
 
-    // 3. Emergency Symptom Guard
-    if (this.detectEmergencyKeywords(messageText)) {
-      return {
-        success: true,
-        response: '⚠️ EMERGENCY NOTICE: Your question references potentially urgent medical symptoms (e.g. chest pain, severe breathing difficulty, or severe bleeding). Please seek immediate emergency medical evaluation at a hospital or contact local emergency medical services. Do not rely on an AI assistant for urgent or acute conditions.',
-        isPersonalized: false,
-        isEmergency: true
-      };
-    }
-
-    // 4. Construct Minimal Context Object based on User Role
+    // 3. Construct Authorized Minimal Context Object
     let contextData = {};
-    let systemPrompt = '';
 
     if (user.role === 'patient') {
-      systemPrompt = `You are AyurSutra AI Wellness Assistant. You provide personalized Ayurvedic wellness education, diet advice, and Panchakarma therapy guidance. You are NOT a doctor. You must NOT diagnose, prescribe, or alter treatments. Direct users to consult their doctor for medical decisions.`;
-
-      // Fetch minimum necessary patient context
       const patientUser = await User.findById(user._id).select('age gender condition allergies');
       const activeRx = await Prescription.findOne({ patientId: user._id, status: 'in-progress' });
       const nextAppt = await Appointment.findOne({ patientId: user._id, status: 'scheduled' }).sort({ appointment_date: 1 });
@@ -98,7 +69,7 @@ class ChatbotService {
         contextData.age = patientUser.age || 'N/A';
         contextData.gender = patientUser.gender || 'N/A';
         contextData.recordedCondition = patientUser.condition || 'N/A';
-        contextData.knownAllergies = patientUser.allergies || 'None recorded';
+        contextData.knownAllergies = patientUser.allergies || 'UNCONFIRMED - NOT RECORDED';
       }
 
       if (activeRx) {
@@ -109,18 +80,12 @@ class ChatbotService {
       if (nextAppt) {
         contextData.nextUpcomingAppointment = `${nextAppt.treatment} on ${new Date(nextAppt.appointment_date).toLocaleDateString()} at ${nextAppt.appointment_time}`;
       }
-    } else if (user.role === 'doctor') {
-      systemPrompt = `You are AyurSutra AI Clinical Assistant for Doctors. You assist licensed Ayurvedic physicians with medical literature references, Panchakarma protocol summaries, and clinical concepts.`;
-    } else if (user.role === 'therapist') {
-      systemPrompt = `You are AyurSutra AI Therapy Assistant for Therapists. You provide Panchakarma session care steps, post-therapy guidance, and wellness education.`;
-    } else {
-      systemPrompt = `You are AyurSutra Clinic Assistant. You assist clinic staff with general operational workflows and platform guidance.`;
     }
 
-    // 5. Query AI Provider
-    const aiResult = await aiProvider.generateChatResponse(systemPrompt, messageText, contextData);
+    // 4. Query Self-Contained Knowledge Provider (0 External HTTP calls)
+    const aiResult = await aiProvider.generateChatResponse('', messageText, contextData);
 
-    // 6. Save or Update Conversation in Database
+    // 5. Save or Update Conversation in Database
     let conversation;
     if (conversationId) {
       conversation = await ChatConversation.findOne({ _id: conversationId, userId: user._id });
@@ -135,7 +100,6 @@ class ChatbotService {
       });
     }
 
-    // Push user message and assistant reply
     conversation.messages.push({
       sender: 'user',
       text: messageText,
@@ -144,27 +108,33 @@ class ChatbotService {
 
     conversation.messages.push({
       sender: 'assistant',
-      text: aiResult.response,
+      text: aiResult.answer,
       timestamp: new Date(),
-      isPersonalized: aiResult.isPersonalized
+      isPersonalized: aiResult.personalizationApplied
     });
 
     await conversation.save();
 
-    // 7. Audit Log
+    // 6. Audit Log (No PII logged!)
     await AIAuditLog.create({
       userId: user._id,
       role: user.role,
       action: 'AI_CHATBOT_MESSAGE',
-      metadata: { conversationId: conversation._id, isPersonalized: aiResult.isPersonalized }
+      metadata: {
+        conversationId: conversation._id,
+        intent: aiResult.intent,
+        personalizationApplied: aiResult.personalizationApplied,
+        emergency: aiResult.emergency
+      }
     });
 
     return {
       success: true,
       conversationId: conversation._id,
-      response: aiResult.response,
-      isPersonalized: aiResult.isPersonalized,
-      disclaimer: '⚠️ AI Assistant guidance is for educational purposes only. Final clinical decisions must be made by a licensed clinician.'
+      response: aiResult.answer,
+      structured: aiResult,
+      isPersonalized: aiResult.personalizationApplied,
+      disclaimer: aiResult.disclaimer
     };
   }
 

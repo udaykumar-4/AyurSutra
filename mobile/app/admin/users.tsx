@@ -204,7 +204,7 @@ export default function AdminUsersScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="User Management" subtitle="System Account Directory & Controls" showLogout={false} />
+      <Header title="User Management" subtitle="System Account Directory & Controls" showLogout={true} />
 
       <View style={styles.topBar}>
         <Button

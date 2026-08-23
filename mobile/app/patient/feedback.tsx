@@ -66,7 +66,7 @@ export default function PatientFeedbackScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Rate Your Experience" subtitle="Provide Feedback for Doctor & Therapist" showLogout={false} />
+      <Header title="Patient Feedback" subtitle="Share Your Session Experience" showLogout={true} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Banner Card */}

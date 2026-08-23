@@ -634,15 +634,15 @@ async function updateAdminStats() {
         const activeTherapists = users.filter(u => u.role === 'therapist' && u.status === 'active').length;
         
         const completedAppointments = appointments.filter(a => a.status === 'completed');
-        const today = new Date().toISOString().split('T')[0];
-        const newRegistrations = users.filter(u => u.createdAt.startsWith(today)).length;
+        const today = getTodayDateStr();
+        const newRegistrations = users.filter(u => u.createdAt && u.createdAt.startsWith(today)).length;
         
         // --- Update MAIN Dashboard Cards ---
         document.getElementById('totalPatients').textContent = totalPatients;
         document.getElementById('activeDoctors').textContent = activeDoctors;
         document.getElementById('activeTherapists').textContent = activeTherapists;
         document.getElementById('todaySessions').textContent = appointments.filter(a => 
-            a.appointment_date.startsWith(today) && a.status !== 'cancelled'
+            getLocalDateStr(a.appointment_date) === today && a.status !== 'cancelled'
         ).length;
 
         // --- Update REPORT Tab Cards ---
@@ -953,9 +953,9 @@ async function updateDoctorStats() {
         const myPatientIds = new Set(prescriptions.map(p => p.patientId));
         document.getElementById('doctorActivePatients').textContent = myPatientIds.size;
         
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayDateStr();
         document.getElementById('doctorConsultations').textContent = appointments.filter(a => 
-            a.appointment_date.startsWith(today) && a.status !== 'cancelled'
+            getLocalDateStr(a.appointment_date) === today && a.status !== 'cancelled'
         ).length;
         
         document.getElementById('doctorTreatmentsPrescribed').textContent = prescriptions.length;
@@ -1201,8 +1201,8 @@ async function loadTodaySessions() {
 
     try {
         const appointments = await authFetch(`${API_URL}/appointments?therapistId=${currentUser._id}`);
-        const today = new Date().toISOString().split('T')[0];
-        const sessions = appointments.filter(a => a.appointment_date.startsWith(today) && a.status !== 'cancelled');
+        const today = getTodayDateStr();
+        const sessions = appointments.filter(a => getLocalDateStr(a.appointment_date) === today && a.status !== 'cancelled');
 
         if (sessions.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">No sessions scheduled for today.</td></tr>`;
@@ -1419,9 +1419,9 @@ async function updateTherapistStats() {
     try {
         const appointments = await authFetch(`${API_URL}/appointments?therapistId=${currentUser._id}`);
         
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayDateStr();
         const todaySessions = appointments.filter(a => 
-            a.appointment_date.startsWith(today) && 
+            getLocalDateStr(a.appointment_date) === today && 
             a.status !== 'cancelled'
         );
         
@@ -1671,10 +1671,11 @@ async function updatePatientStats() {
         
         let nextApptDate = "None";
         if (nextAppt) {
-            const today = new Date().toISOString().split('T')[0];
-            const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-            if (nextAppt.appointment_date.startsWith(today)) nextApptDate = "Today";
-            else if (nextAppt.appointment_date.startsWith(tomorrow)) nextApptDate = "Tomorrow";
+            const today = getTodayDateStr();
+            const tomorrow = getTomorrowDateStr();
+            const apptDateStr = getLocalDateStr(nextAppt.appointment_date);
+            if (apptDateStr === today) nextApptDate = "Today";
+            else if (apptDateStr === tomorrow) nextApptDate = "Tomorrow";
             else nextApptDate = formatDate(nextAppt.appointment_date);
         }
         
@@ -1708,11 +1709,25 @@ async function populateDoctorDropdown() {
     try {
         const doctors = await authFetch(`${API_URL}/users?role=doctor`);
         select.innerHTML = '<option value="">-- Select a Doctor --</option>';
-        doctors.forEach(doc => {
-            select.innerHTML += `<option value="${doc._id}">${doc.full_name}</option>`;
+        doctors.forEach((doc, idx) => {
+            select.innerHTML += `<option value="${doc._id}" ${idx === 0 ? 'selected' : ''}>${doc.full_name}</option>`;
         });
     } catch (error) {
         console.error("Failed to load doctors for dropdown:", error);
+    }
+}
+
+async function populateTherapistDropdown() {
+    const select = document.getElementById('preferredTherapist');
+    if (!select) return;
+    try {
+        const therapists = await authFetch(`${API_URL}/users?role=therapist`);
+        select.innerHTML = '<option value="">No Preference</option>';
+        therapists.forEach((ther, idx) => {
+            select.innerHTML += `<option value="${ther._id}" ${idx === 0 ? 'selected' : ''}>${ther.full_name}</option>`;
+        });
+    } catch (error) {
+        console.error("Failed to load therapists for dropdown:", error);
     }
 }
 
@@ -1732,10 +1747,158 @@ function toggleAppointmentFields() {
     }
 }
 
-function showBookAppointmentModal() {
-    document.getElementById('appointmentDate').value = new Date().toISOString().split('T')[0];
+const DEFAULT_WEB_SLOTS = [
+    '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
+    '11:00 AM', '11:30 AM', '12:00 PM', '02:00 PM',
+    '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM',
+    '04:30 PM', '05:00 PM'
+];
+
+function renderDefaultWebSlots() {
+    const container = document.getElementById('webTimeSlotsContainer');
+    if (!container) return;
+    currentWebSlots = DEFAULT_WEB_SLOTS.map(t => ({ time: t, status: 'available' }));
+    container.innerHTML = DEFAULT_WEB_SLOTS.map(t => `
+        <button type="button" 
+                class="time-slot-pill"
+                data-time="${t}"
+                onclick="selectParticularTimeSlot('${t}')" 
+                style="background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-width: 90px;">
+            <span>${t}</span>
+            <span style="font-size: 9px; opacity: 0.85; margin-top: 2px;">AVAILABLE</span>
+        </button>
+    `).join('');
+}
+
+let currentWebSlots = [];
+
+function selectParticularTimeSlot(timeStr) {
+    const apptTimeInput = document.getElementById('appointmentTime');
+    const infoContainer = document.getElementById('particularTimeInfo');
+    if (apptTimeInput) apptTimeInput.value = timeStr;
+
+    const slotObj = currentWebSlots.find(s => s.time === timeStr);
+    const statusLower = slotObj ? (slotObj.status || '').toLowerCase() : 'available';
+
+    // Highlight selected pill button
+    const container = document.getElementById('webTimeSlotsContainer');
+    if (container) {
+        const buttons = container.querySelectorAll('.time-slot-pill');
+        buttons.forEach(btn => {
+            if (btn.getAttribute('data-time') === timeStr) {
+                btn.style.border = '2px solid #28a745';
+                btn.style.boxShadow = '0 0 6px rgba(40, 167, 69, 0.4)';
+            } else {
+                btn.style.border = '1px solid #ccc';
+                btn.style.boxShadow = 'none';
+            }
+        });
+    }
+
+    if (infoContainer) {
+        infoContainer.style.display = 'block';
+        if (statusLower === 'available') {
+            infoContainer.style.background = '#e8f5e9';
+            infoContainer.style.color = '#2e7d32';
+            infoContainer.style.border = '1px solid #a5d6a7';
+            infoContainer.innerHTML = `✅ <strong>${timeStr}</strong> is <strong>AVAILABLE</strong> for booking!`;
+        } else if (statusLower === 'booked') {
+            infoContainer.style.background = '#ffebee';
+            infoContainer.style.color = '#c62828';
+            infoContainer.style.border = '1px solid #ef9a9a';
+            infoContainer.innerHTML = `❌ <strong>${timeStr}</strong> is already <strong>BOOKED</strong>. Please select another slot.`;
+        } else if (statusLower === 'blocked') {
+            infoContainer.style.background = '#fff3e0';
+            infoContainer.style.color = '#e65100';
+            infoContainer.style.border = '1px solid #ffe0b2';
+            infoContainer.innerHTML = `⚠️ <strong>${timeStr}</strong> is <strong>BLOCKED</strong> in provider schedule.`;
+        } else {
+            infoContainer.style.background = '#f5f5f5';
+            infoContainer.style.color = '#616161';
+            infoContainer.style.border = '1px solid #e0e0e0';
+            infoContainer.innerHTML = `ℹ️ <strong>${timeStr}</strong> status: <strong>${statusLower.toUpperCase()}</strong>`;
+        }
+    }
+}
+
+async function fetchWebAvailability() {
+    const container = document.getElementById('webTimeSlotsContainer');
+    const infoContainer = document.getElementById('particularTimeInfo');
+    const apptTimeInput = document.getElementById('appointmentTime');
+
+    if (!container) return;
+    if (infoContainer) infoContainer.style.display = 'none';
+    if (apptTimeInput) apptTimeInput.value = '';
+
+    const treatmentType = document.getElementById('treatmentType').value || 'Consultation';
+    const providerType = treatmentType === 'Consultation' ? 'doctor' : 'therapist';
+    const providerId = treatmentType === 'Consultation'
+        ? document.getElementById('preferredDoctor').value
+        : document.getElementById('preferredTherapist').value;
+    const date = document.getElementById('appointmentDate').value || getTodayDateStr();
+
+    if (!providerId || !date) {
+        renderDefaultWebSlots();
+        return;
+    }
+
+    try {
+        const avail = await authFetch(`${API_URL}/appointments/availability?providerId=${providerId}&providerType=${providerType}&date=${date}`);
+        if (avail && avail.slots) {
+            currentWebSlots = avail.slots;
+            container.innerHTML = avail.slots.map(s => {
+                const statusLower = (s.status || '').toLowerCase();
+                let bg = '#e8f5e9', color = '#2e7d32', border = '#a5d6a7', label = 'AVAILABLE';
+                let cursor = 'pointer';
+
+                if (statusLower === 'booked') {
+                    bg = '#f0f0f0'; color = '#757575'; border = '#bdbdbd'; label = 'BOOKED';
+                } else if (statusLower === 'blocked') {
+                    bg = '#ffebee'; color = '#c62828'; border = '#ef9a9a'; label = 'BLOCKED';
+                } else if (statusLower !== 'available') {
+                    bg = '#fafafa'; color = '#9e9e9e'; border = '#e0e0e0'; label = statusLower.toUpperCase();
+                }
+
+                return `
+                    <button type="button" 
+                            class="time-slot-pill"
+                            data-time="${s.time}"
+                            onclick="selectParticularTimeSlot('${s.time}')" 
+                            style="background: ${bg}; color: ${color}; border: 1px solid ${border}; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: ${cursor}; display: flex; flex-direction: column; align-items: center; min-width: 90px;">
+                        <span>${s.time}</span>
+                        <span style="font-size: 9px; opacity: 0.85; margin-top: 2px;">${label}</span>
+                    </button>
+                `;
+            }).join('');
+        } else {
+            renderDefaultWebSlots();
+        }
+    } catch (err) {
+        console.error("Error fetching web availability:", err);
+        renderDefaultWebSlots();
+    }
+}
+
+async function showBookAppointmentModal() {
+    document.getElementById('appointmentDate').value = getTodayDateStr();
+    document.getElementById('treatmentType').value = 'Consultation';
     toggleAppointmentFields(); 
     showModal('bookAppointmentModal');
+
+    renderDefaultWebSlots();
+    await populateDoctorDropdown();
+    await populateTherapistDropdown();
+    fetchWebAvailability();
+
+    const apptDateEl = document.getElementById('appointmentDate');
+    const prefDocEl = document.getElementById('preferredDoctor');
+    const prefTherEl = document.getElementById('preferredTherapist');
+    const treatTypeEl = document.getElementById('treatmentType');
+
+    if (apptDateEl) apptDateEl.onchange = fetchWebAvailability;
+    if (prefDocEl) prefDocEl.onchange = fetchWebAvailability;
+    if (prefTherEl) prefTherEl.onchange = fetchWebAvailability;
+    if (treatTypeEl) treatTypeEl.onchange = () => { toggleAppointmentFields(); fetchWebAvailability(); };
 }
 
 async function bookAppointment(event) {
@@ -1774,7 +1937,8 @@ async function bookAppointment(event) {
         showNotification('Appointment Booked', `Your ${treatmentType} appointment is scheduled.`);
         event.target.reset(); 
     } catch (error) {
-        showNotification('Error', error.message, 'error');
+        showNotification('Booking Conflict', error.message, 'error');
+        fetchWebAvailability();
     }
 }
 
@@ -2131,6 +2295,39 @@ function getStatusBadge(status) {
         'confirmed': 'success'
     };
     return badgeMap[status] || 'info';
+}
+
+function getLocalDateStr(dateInput) {
+    if (!dateInput) return '';
+    if (typeof dateInput === 'string') {
+        const cleanStr = dateInput.trim();
+        if (/^\d{4}-\d{2}-\d{2}/.test(cleanStr)) {
+            return cleanStr.substring(0, 10);
+        }
+    }
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
+function getTodayDateStr() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
+function getTomorrowDateStr() {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }
 
 function formatDate(dateStr) {

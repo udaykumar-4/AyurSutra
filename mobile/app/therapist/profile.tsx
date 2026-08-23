@@ -131,7 +131,7 @@ export default function TherapistProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Therapist Profile & Feedback" subtitle="Reviews, Availability & Settings" showLogout={false} />
+      <Header title="Therapist Profile" subtitle="Account & Availability Settings" showLogout={true} />
 
       {/* Segmented Control Bar */}
       <View style={styles.tabBar}>

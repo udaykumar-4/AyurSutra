@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,9 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Modal,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
 import userService from '../../services/userService';
@@ -18,11 +17,12 @@ import { User } from '../../types/user';
 import Colors from '../../constants/Colors';
 import Header from '../../components/Header';
 import Card from '../../components/Card';
-import Input from '../../components/Input';
 import Button from '../../components/Button';
 import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
 import SmartSchedulingModal from '../../components/SmartSchedulingModal';
+import BookAppointmentModal from '../../components/BookAppointmentModal';
+import { categorizeAppointmentDate } from '../../utils/appointmentDateUtils';
 
 export default function ReceptionistAppointmentsScreen() {
   const { user, isLoading: authLoading } = useAuth();
@@ -42,19 +42,16 @@ export default function ReceptionistAppointmentsScreen() {
   const [showBookModal, setShowBookModal] = useState(false);
   const [showOptimizerModal, setShowOptimizerModal] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState('');
-  const [selectedDoctorId, setSelectedDoctorId] = useState('');
-  const [selectedTherapistId, setSelectedTherapistId] = useState('');
-  const [treatment, setTreatment] = useState('Abhyanga');
-  const [appointmentDate, setAppointmentDate] = useState('2026-08-16');
-  const [appointmentTime, setAppointmentTime] = useState('10:00');
-  const [booking, setBooking] = useState(false);
+  const [selectedPatientName, setSelectedPatientName] = useState('');
 
   // Protected Route Check
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'receptionist')) {
-      router.replace('/login');
-    }
-  }, [user, authLoading]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading && (!user || user.role !== 'receptionist')) {
+        router.replace('/login');
+      }
+    }, [user, authLoading])
+  );
 
   const fetchData = async () => {
     if (!user) return;
@@ -70,9 +67,10 @@ export default function ReceptionistAppointmentsScreen() {
       setPatients(pData);
       setDoctors(dData);
       setTherapists(tData);
-      if (pData.length > 0 && !selectedPatientId) setSelectedPatientId(pData[0]._id);
-      if (dData.length > 0 && !selectedDoctorId) setSelectedDoctorId(dData[0]._id);
-      if (tData.length > 0 && !selectedTherapistId) setSelectedTherapistId(tData[0]._id);
+      if (pData.length > 0 && !selectedPatientId) {
+        setSelectedPatientId(pData[0]._id);
+        setSelectedPatientName(pData[0].full_name);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load master appointments list.');
     } finally {
@@ -81,11 +79,13 @@ export default function ReceptionistAppointmentsScreen() {
     }
   };
 
-  useEffect(() => {
-    if (user && user.role === 'receptionist') {
-      fetchData();
-    }
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user && user.role === 'receptionist') {
+        fetchData();
+      }
+    }, [user])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -118,36 +118,8 @@ export default function ReceptionistAppointmentsScreen() {
     }
   };
 
-  const handleCreateAppointment = async () => {
-    if (!selectedPatientId || !treatment.trim() || !appointmentDate || !appointmentTime) {
-      Alert.alert('Validation Error', 'Please select patient, treatment, date, and time.');
-      return;
-    }
-
-    setBooking(true);
-    try {
-      await appointmentService.createAppointment({
-        patientId: selectedPatientId,
-        doctorId: selectedDoctorId || undefined,
-        therapistId: selectedTherapistId || undefined,
-        treatment: treatment.trim(),
-        appointment_date: appointmentDate,
-        appointment_time: appointmentTime,
-      });
-
-      Alert.alert('Booking Confirmed! 🎉', 'New clinic appointment scheduled successfully.');
-      setShowBookModal(false);
-      fetchData();
-    } catch (err: any) {
-      Alert.alert('Booking Error', err.message || 'Failed to schedule appointment.');
-    } finally {
-      setBooking(false);
-    }
-  };
-
   const handleSlotSelectedFromOptimizer = (time: string, date: string) => {
-    setAppointmentTime(time);
-    setAppointmentDate(date);
+    setShowOptimizerModal(false);
     setShowBookModal(true);
   };
 
@@ -155,18 +127,16 @@ export default function ReceptionistAppointmentsScreen() {
     return <LoadingScreen message="Loading Master Schedule..." />;
   }
 
-  const todayStr = new Date().toISOString().split('T')[0];
-
   const filteredAppts = appointments.filter((a) => {
-    const dStr = new Date(a.appointment_date).toISOString().split('T')[0];
-    if (filterTab === 'today') return dStr === todayStr;
-    if (filterTab === 'upcoming') return dStr > todayStr;
+    const cat = categorizeAppointmentDate(a.appointment_date);
+    if (filterTab === 'today') return cat === 'TODAY';
+    if (filterTab === 'upcoming') return cat === 'UPCOMING';
     return true;
   });
 
   return (
     <View style={styles.container}>
-      <Header title="Master Appointments" subtitle="Front-Desk Scheduling & Check-In" showLogout={false} />
+      <Header title="Clinic Appointments" subtitle="Reception Schedule & Booking Desk" showLogout={true} />
 
       <View style={styles.topBar}>
         <Button
@@ -183,6 +153,27 @@ export default function ReceptionistAppointmentsScreen() {
           size="medium"
           style={{ width: '48%' }}
         />
+      </View>
+
+      {/* Select Patient Selector for Receptionist */}
+      <View style={styles.patientSelectorRow}>
+        <Text style={styles.selectLabel}>Booking Patient:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {patients.map((p) => (
+            <TouchableOpacity
+              key={p._id}
+              style={[styles.patientChip, selectedPatientId === p._id && styles.activePatientChip]}
+              onPress={() => {
+                setSelectedPatientId(p._id);
+                setSelectedPatientName(p.full_name);
+              }}
+            >
+              <Text style={[styles.patientChipText, selectedPatientId === p._id && styles.activePatientChipText]}>
+                👤 {p.full_name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Segmented Filter Bar */}
@@ -293,111 +284,23 @@ export default function ReceptionistAppointmentsScreen() {
         )}
       </ScrollView>
 
-      {/* 🌟 Smart Scheduling Modal */}
+      {/* Smart Scheduling Optimizer Modal */}
       <SmartSchedulingModal
         visible={showOptimizerModal}
         onClose={() => setShowOptimizerModal(false)}
-        staffId={selectedDoctorId || selectedTherapistId}
-        staffName={doctors.find(d => d._id === selectedDoctorId)?.full_name || therapists.find(t => t._id === selectedTherapistId)?.full_name}
+        staffId={doctors[0]?._id || therapists[0]?._id}
+        staffName={doctors[0]?.full_name || therapists[0]?.full_name}
         onSelectSlot={handleSlotSelectedFromOptimizer}
       />
 
-      {/* Book New Appointment Modal */}
-      <Modal
+      {/* Real Availability Book Appointment Modal */}
+      <BookAppointmentModal
         visible={showBookModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowBookModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Book Clinic Appointment</Text>
-              <TouchableOpacity onPress={() => setShowBookModal(false)}>
-                <Text style={styles.closeBtn}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={{ maxHeight: 460 }}>
-              {/* Select Patient */}
-              <Text style={styles.selectLabel}>Select Patient:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {patients.map((p) => (
-                  <TouchableOpacity
-                    key={p._id}
-                    style={[styles.selectChip, selectedPatientId === p._id && styles.activeSelectChip]}
-                    onPress={() => setSelectedPatientId(p._id)}
-                  >
-                    <Text style={[styles.selectChipText, selectedPatientId === p._id && styles.activeSelectChipText]}>
-                      👤 {p.full_name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              {/* Select Doctor */}
-              <Text style={styles.selectLabel}>Assign Doctor (Optional):</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {doctors.map((d) => (
-                  <TouchableOpacity
-                    key={d._id}
-                    style={[styles.selectChip, selectedDoctorId === d._id && styles.activeSelectChip]}
-                    onPress={() => setSelectedDoctorId(d._id)}
-                  >
-                    <Text style={[styles.selectChipText, selectedDoctorId === d._id && styles.activeSelectChipText]}>
-                      👨‍⚕️ {d.full_name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              {/* Select Therapist */}
-              <Text style={styles.selectLabel}>Assign Therapist (Optional):</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {therapists.map((t) => (
-                  <TouchableOpacity
-                    key={t._id}
-                    style={[styles.selectChip, selectedTherapistId === t._id && styles.activeSelectChip]}
-                    onPress={() => setSelectedTherapistId(t._id)}
-                  >
-                    <Text style={[styles.selectChipText, selectedTherapistId === t._id && styles.activeSelectChipText]}>
-                      🧘 {t.full_name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <Input
-                label="Treatment Name"
-                placeholder="e.g. Abhyanga, Shirodhara, Consultation"
-                value={treatment}
-                onChangeText={setTreatment}
-              />
-
-              <Input
-                label="Date (YYYY-MM-DD)"
-                placeholder="2026-08-16"
-                value={appointmentDate}
-                onChangeText={setAppointmentDate}
-              />
-
-              <Input
-                label="Time (HH:MM)"
-                placeholder="10:00"
-                value={appointmentTime}
-                onChangeText={setAppointmentTime}
-              />
-
-              <Button
-                title="Confirm Appointment Booking"
-                onPress={handleCreateAppointment}
-                loading={booking}
-                style={{ marginTop: 12 }}
-              />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowBookModal(false)}
+        patientId={selectedPatientId}
+        patientName={selectedPatientName}
+        onSuccess={fetchData}
+      />
     </View>
   );
 }
@@ -426,6 +329,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 12,
+  },
+  patientSelectorRow: {
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
+  selectLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    marginBottom: 6,
+  },
+  patientChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginRight: 8,
+  },
+  activePatientChip: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  patientChipText: {
+    fontSize: 12,
+    color: Colors.text,
+  },
+  activePatientChipText: {
+    color: Colors.white,
+    fontWeight: '700',
   },
   tabBar: {
     flexDirection: 'row',
@@ -535,59 +469,5 @@ const styles = StyleSheet.create({
   },
   btnGroup: {
     flexDirection: 'row',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    padding: 16,
-  },
-  modalContent: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 18,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  closeBtn: {
-    fontSize: 20,
-    color: Colors.textMuted,
-    padding: 4,
-  },
-  selectLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: 6,
-  },
-  selectChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginRight: 8,
-  },
-  activeSelectChip: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  selectChipText: {
-    fontSize: 12,
-    color: Colors.text,
-  },
-  activeSelectChipText: {
-    fontWeight: '700',
-    color: Colors.white,
   },
 });

@@ -48,7 +48,7 @@ export default function ReceptionistMoreScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Front-Desk Settings" subtitle="Receptionist Profile & Account" showLogout={false} />
+      <Header title="Reception Settings" subtitle="Account & Desk Configuration" showLogout={true} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Receptionist Profile Card */}

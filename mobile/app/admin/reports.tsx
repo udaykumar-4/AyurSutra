@@ -96,7 +96,7 @@ export default function AdminReportsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Administrative Reports" subtitle="System Audit & Financial Summary" showLogout={false} />
+      <Header title="Administrative Reports" subtitle="System Audit & Financial Summary" showLogout={true} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

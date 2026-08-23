@@ -143,7 +143,7 @@ export default function DoctorPatientsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Patient Directory" subtitle="Authorized Patient Charts & Medical History" showLogout={false} />
+      <Header title="My Patients" subtitle="Patient Profiles & Records" showLogout={true} />
 
       <View style={styles.searchBarContainer}>
         <Input

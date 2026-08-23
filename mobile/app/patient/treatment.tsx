@@ -73,7 +73,7 @@ export default function PatientTreatmentScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Treatment Plan" subtitle="Panchakarma Protocol & Session Tracking" showLogout={false} />
+      <Header title="My Treatment Plan" subtitle="Panchakarma Protocol & Progress" showLogout={true} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

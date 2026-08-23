@@ -91,7 +91,7 @@ export default function TherapistTreatmentsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Treatment Progress" subtitle="Panchakarma Session Logger" showLogout={false} />
+      <Header title="Assigned Treatments" subtitle="Panchakarma Protocols" showLogout={true} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
