@@ -197,8 +197,8 @@ export default function PatientHomeScreen() {
             <Card key={item._id} style={styles.todayCard}>
               <View style={styles.cardTop}>
                 <Text style={styles.cardBadgeToday}>TODAY AT {item.appointment_time}</Text>
-                <Text style={[styles.paidStatus, { color: item.isPaid ? Colors.success : Colors.warning }]}>
-                  {item.isPaid ? '✓ PAID' : 'UNPAID'}
+                <Text style={[styles.paidStatus, { color: item.isPaid ? Colors.success : (item.status === 'cancelled' ? Colors.textSecondary : Colors.warning) }]}>
+                  {item.isPaid ? '✓ PAID' : (item.status === 'cancelled' ? 'CANCELLED' : 'UNPAID')}
                 </Text>
               </View>
               <Text style={styles.cardTitle}>🌿 {item.treatment}</Text>

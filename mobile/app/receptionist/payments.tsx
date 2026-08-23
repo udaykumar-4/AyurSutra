@@ -93,7 +93,7 @@ export default function ReceptionistPaymentsScreen() {
   const filteredItems = appointments.filter((a) => {
     if (filterTab === 'unpaid') return !a.isPaid && a.status !== 'cancelled';
     if (filterTab === 'paid') return a.isPaid;
-    return true;
+    return a.status !== 'cancelled' || a.isPaid;
   });
 
   return (
@@ -147,7 +147,7 @@ export default function ReceptionistPaymentsScreen() {
             onPress={() => setFilterTab('all')}
           >
             <Text style={[styles.tabText, filterTab === 'all' && styles.activeTabText]}>
-              All ({appointments.length})
+              All ({appointments.filter(a => a.status !== 'cancelled' || a.isPaid).length})
             </Text>
           </TouchableOpacity>
         </View>
@@ -165,7 +165,7 @@ export default function ReceptionistPaymentsScreen() {
                 <Text style={styles.patientName}>
                   👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
                 </Text>
-                <Text style={[styles.costBadge, { color: item.isPaid ? Colors.success : Colors.warning }]}>
+                <Text style={[styles.costBadge, { color: item.isPaid ? Colors.success : (item.status === 'cancelled' ? Colors.textSecondary : Colors.warning) }]}>
                   ₹{item.cost || 1500}
                 </Text>
               </View>
@@ -179,16 +179,18 @@ export default function ReceptionistPaymentsScreen() {
               </Text>
 
               <View style={styles.cardFooter}>
-                <Text style={[styles.statusText, { color: item.isPaid ? Colors.success : Colors.warning }]}>
-                  STATUS: {item.isPaid ? 'PAID ✓' : 'UNPAID PENDING'}
+                <Text style={[styles.statusText, { color: item.isPaid ? Colors.success : (item.status === 'cancelled' ? Colors.textSecondary : Colors.warning) }]}>
+                  STATUS: {item.isPaid ? 'PAID ✓' : (item.status === 'cancelled' ? 'CANCELLED (NO FEE DUE)' : 'UNPAID PENDING')}
                 </Text>
-                <Button
-                  title={item.isPaid ? 'Mark Unpaid' : 'Settle Payment'}
-                  onPress={() => handleTogglePayment(item._id, !!item.isPaid)}
-                  loading={updatingId === item._id}
-                  size="small"
-                  variant={item.isPaid ? 'outline' : 'primary'}
-                />
+                {item.status !== 'cancelled' && (
+                  <Button
+                    title={item.isPaid ? 'Mark Unpaid' : 'Settle Payment'}
+                    onPress={() => handleTogglePayment(item._id, !!item.isPaid)}
+                    loading={updatingId === item._id}
+                    size="small"
+                    variant={item.isPaid ? 'outline' : 'primary'}
+                  />
+                )}
               </View>
             </Card>
           ))

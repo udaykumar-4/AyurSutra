@@ -193,8 +193,8 @@ export default function PatientAppointmentsScreen() {
 
                 <View style={styles.cardFooter}>
                   <Text style={styles.costText}>Cost: ₹{item.cost || 1500}</Text>
-                  <Text style={[styles.paidText, { color: item.isPaid ? Colors.success : Colors.warning }]}>
-                    {item.isPaid ? '✓ PAID' : 'UNPAID'}
+                  <Text style={[styles.paidText, { color: item.isPaid ? Colors.success : (item.status === 'cancelled' ? Colors.textSecondary : Colors.warning) }]}>
+                    {item.isPaid ? '✓ PAID' : (item.status === 'cancelled' ? 'CANCELLED' : 'UNPAID')}
                   </Text>
                 </View>
 

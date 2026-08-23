@@ -244,14 +244,18 @@ export default function ReceptionistAppointmentsScreen() {
               {/* Payment & Status Control Actions */}
               <View style={styles.actionSection}>
                 <View style={styles.paymentRow}>
-                  <Text style={styles.costText}>Fee: ₹{item.cost || 1500}</Text>
-                  <Button
-                    title={item.isPaid ? '✓ PAID' : 'Mark Paid'}
-                    onPress={() => handleTogglePayment(item._id, !!item.isPaid)}
-                    loading={updatingId === item._id}
-                    size="small"
-                    variant={item.isPaid ? 'outline' : 'primary'}
-                  />
+                  <Text style={styles.costText}>
+                    Fee: ₹{item.cost || 1500} {item.status === 'cancelled' ? '(Cancelled - No Fee Due)' : ''}
+                  </Text>
+                  {item.status !== 'cancelled' && (
+                    <Button
+                      title={item.isPaid ? '✓ PAID' : 'Mark Paid'}
+                      onPress={() => handleTogglePayment(item._id, !!item.isPaid)}
+                      loading={updatingId === item._id}
+                      size="small"
+                      variant={item.isPaid ? 'outline' : 'primary'}
+                    />
+                  )}
                 </View>
 
                 <View style={styles.statusRow}>
