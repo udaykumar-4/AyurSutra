@@ -1,6 +1,7 @@
 const chatbotService = require('../services/ai/chatbotService');
 const treatmentRecommendationService = require('../services/ai/treatmentRecommendationService');
 const diseasePredictionService = require('../services/ai/diseasePredictionService');
+const patientTreatmentRecommendationController = require('./patientTreatmentRecommendationController');
 
 // @desc    Send message to AI Chatbot
 // @route   POST /api/ai/chat/message
@@ -41,10 +42,14 @@ const deleteChatHistory = async (req, res) => {
   }
 };
 
-// @desc    Generate AI Treatment Recommendation Options (Doctor Only)
+// @desc    Generate AI Treatment Recommendation Options (Doctor or Patient)
 // @route   POST /api/ai/treatment-recommendations/generate
 const generateTreatmentRecommendation = async (req, res) => {
   try {
+    if (req.user && req.user.role === 'patient') {
+      return await patientTreatmentRecommendationController.generateRecommendation(req, res);
+    }
+
     const { patientId, presentingSymptoms } = req.body;
 
     if (!patientId) {
@@ -64,10 +69,14 @@ const generateTreatmentRecommendation = async (req, res) => {
   }
 };
 
-// @desc    Get Saved AI Treatment Recommendations for a Patient (Doctor Only)
+// @desc    Get Saved AI Treatment Recommendations for a Patient (Doctor or Patient)
 // @route   GET /api/ai/treatment-recommendations/:patientId
 const getPatientRecommendations = async (req, res) => {
   try {
+    if (req.user && req.user.role === 'patient') {
+      return await patientTreatmentRecommendationController.getPatientRecommendations(req, res);
+    }
+
     const result = await treatmentRecommendationService.getPatientRecommendations(
       req.user,
       req.params.patientId

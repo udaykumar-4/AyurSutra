@@ -9,12 +9,18 @@ const {
   generateDiseasePrediction,
   getPatientPredictions
 } = require('../controllers/aiController');
+const patientTreatmentRecommendationController = require('../controllers/patientTreatmentRecommendationController');
 const { protect } = require('../middleware/authMiddleware');
 
 // Chatbot routes
 router.post('/chat/message', protect, postChatMessage);
 router.get('/chat/history', protect, getChatHistory);
 router.delete('/chat/history/:id', protect, deleteChatHistory);
+
+// Patient Isolated Treatment Recommendations (Direct routes under /api/ai)
+router.post('/patient-treatment-recommendations', protect, patientTreatmentRecommendationController.generateRecommendation);
+router.get('/patient-treatment-recommendations', protect, patientTreatmentRecommendationController.getPatientRecommendations);
+router.get('/patient-treatment-recommendations/:id', protect, patientTreatmentRecommendationController.getPatientRecommendationById);
 
 // Clinical Decision Support: Treatment Recommendations
 router.post('/treatment-recommendations/generate', protect, generateTreatmentRecommendation);

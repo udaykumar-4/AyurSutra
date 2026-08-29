@@ -23,6 +23,7 @@ import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
 import OutcomeAnalyticsCard from '../../components/OutcomeAnalyticsCard';
 import AIChatbotModal from '../../components/AIChatbotModal';
+import PatientTreatmentRecommendationModal from '../../components/PatientTreatmentRecommendationModal';
 import { filterTodayAppointments, filterUpcomingAppointments } from '../../utils/appointmentDateUtils';
 
 export default function PatientHomeScreen() {
@@ -36,8 +37,9 @@ export default function PatientHomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // AI Chatbot Modal state
+  // AI Modal states
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
 
   // Protected Route Check
   useFocusEffect(
@@ -150,6 +152,22 @@ export default function PatientHomeScreen() {
             </View>
           </View>
           <Text style={styles.aiChatArrow}>Ask →</Text>
+        </TouchableOpacity>
+
+        {/* 🌟 NEW ISOLATED AI FEATURE: AI Treatment Recommendations Banner */}
+        <TouchableOpacity
+          style={[styles.aiChatCard, { backgroundColor: '#E8F5E9', borderColor: '#A5D6A7', marginTop: 10 }]}
+          onPress={() => setShowRecommendationModal(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.aiChatLeft}>
+            <Text style={styles.aiChatIcon}>🌿</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.aiChatTitle, { color: Colors.primary }]}>🌿 AI Treatment Recommendations</Text>
+              <Text style={[styles.aiChatSub, { color: '#2E7D32' }]}>Get personalized Ayurvedic therapy guidance for your symptoms</Text>
+            </View>
+          </View>
+          <Text style={[styles.aiChatArrow, { color: Colors.primary }]}>Explore →</Text>
         </TouchableOpacity>
 
         {/* Current Treatment Banner */}
@@ -292,6 +310,13 @@ export default function PatientHomeScreen() {
         onClose={() => setShowChatModal(false)}
         userRole="patient"
         userName={user?.full_name}
+      />
+
+      {/* 🌿 AI Treatment Recommendation Modal */}
+      <PatientTreatmentRecommendationModal
+        visible={showRecommendationModal}
+        onClose={() => setShowRecommendationModal(false)}
+        patientName={user?.full_name}
       />
     </View>
   );

@@ -18,6 +18,8 @@ import Card from '../../components/Card';
 import ProgressBar from '../../components/ProgressBar';
 import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
+import Button from '../../components/Button';
+import PatientTreatmentRecommendationModal from '../../components/PatientTreatmentRecommendationModal';
 
 export default function PatientTreatmentScreen() {
   const { user, isLoading: authLoading } = useAuth();
@@ -28,6 +30,7 @@ export default function PatientTreatmentScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
 
   // Protected Route Check
   useEffect(() => {
@@ -81,6 +84,22 @@ export default function PatientTreatmentScreen() {
       >
         {error ? <ErrorView message={error} onRetry={fetchData} /> : null}
 
+        {/* 🌟 NEW ISOLATED AI FEATURE: Patient Treatment Recommendation Button */}
+        <Card style={{ backgroundColor: '#E8F5E9', borderColor: '#A5D6A7', marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={{ fontSize: 14, fontWeight: '800', color: Colors.primary }}>🌿 AI Treatment Recommendations</Text>
+              <Text style={{ fontSize: 12, color: '#2E7D32', marginTop: 2 }}>Discover knowledge-based Panchakarma therapy options for your symptoms</Text>
+            </View>
+            <Button
+              title="Explore →"
+              onPress={() => setShowRecommendationModal(true)}
+              size="small"
+              style={{ backgroundColor: Colors.primary }}
+            />
+          </View>
+        </Card>
+
         {activeRx ? (
           <View>
             {/* Active Plan Card */}
@@ -111,53 +130,48 @@ export default function PatientTreatmentScreen() {
                 </View>
 
                 <View style={styles.gridItem}>
-                  <Text style={styles.gridLabel}>🧘 Assigned Therapist</Text>
+                  <Text style={styles.gridLabel}>🧘 Primary Therapist</Text>
                   <Text style={styles.gridValue}>
                     {typeof activeRx.therapistId === 'object' ? activeRx.therapistId.full_name : 'Therapist'}
                   </Text>
                 </View>
 
                 <View style={styles.gridItem}>
-                  <Text style={styles.gridLabel}>⏱️ Duration</Text>
-                  <Text style={styles.gridValue}>{activeRx.duration} Days / Sessions</Text>
+                  <Text style={styles.gridLabel}>⏱️ Total Sessions</Text>
+                  <Text style={styles.gridValue}>{activeRx.duration} sessions</Text>
                 </View>
 
                 <View style={styles.gridItem}>
-                  <Text style={styles.gridLabel}>📊 Completed</Text>
-                  <Text style={styles.gridValue}>{activeRx.progressCompleted} Sessions Done</Text>
+                  <Text style={styles.gridLabel}>📅 Start Date</Text>
+                  <Text style={styles.gridValue}>
+                    {activeRx.createdAt ? new Date(activeRx.createdAt).toLocaleDateString() : 'N/A'}
+                  </Text>
                 </View>
               </View>
 
-              {activeRx.plan ? (
-                <View style={styles.protocolBox}>
-                  <Text style={styles.boxTitle}>Detailed Protocol Plan:</Text>
-                  <Text style={styles.boxText}>{activeRx.plan}</Text>
-                </View>
-              ) : null}
-
               {activeRx.notes ? (
-                <View style={styles.notesBox}>
-                  <Text style={styles.boxTitle}>Doctor's Instructions & Dietary Advice:</Text>
+                <View style={styles.protocolBox}>
+                  <Text style={styles.boxTitle}>📋 Doctor's Clinical Protocol & Notes</Text>
                   <Text style={styles.boxText}>{activeRx.notes}</Text>
                 </View>
               ) : null}
             </Card>
 
-            {/* Clinical Progress Notes History */}
+            {/* Session Notes */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Session & Clinical Notes</Text>
+              <Text style={styles.sectionTitle}>Therapist Consultation Notes</Text>
             </View>
 
             {notes.length === 0 ? (
               <Card style={styles.subCard}>
-                <Text style={styles.emptyNotesText}>No clinical progress notes logged yet.</Text>
+                <Text style={styles.emptyNotesText}>No clinical consultation notes logged yet.</Text>
               </Card>
             ) : (
               notes.map((noteItem) => (
                 <Card key={noteItem._id} style={styles.noteCard}>
                   <View style={styles.noteHeader}>
                     <Text style={styles.authorText}>
-                      ✍️ {typeof noteItem.authorId === 'object' ? `${noteItem.authorId.full_name} (${noteItem.authorId.role.toUpperCase()})` : 'Medical Staff'}
+                      📝 {typeof noteItem.authorId === 'object' ? `${noteItem.authorId.full_name}` : 'Medical Provider'}
                     </Text>
                     {noteItem.createdAt && (
                       <Text style={styles.dateText}>
@@ -178,6 +192,13 @@ export default function PatientTreatmentScreen() {
           </Card>
         )}
       </ScrollView>
+
+      {/* 🌿 AI Treatment Recommendation Modal */}
+      <PatientTreatmentRecommendationModal
+        visible={showRecommendationModal}
+        onClose={() => setShowRecommendationModal(false)}
+        patientName={user?.full_name}
+      />
     </View>
   );
 }
