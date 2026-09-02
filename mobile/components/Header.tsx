@@ -41,16 +41,18 @@ export const Header: React.FC<HeaderProps> = ({
           </Text>
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>{title || user?.full_name}</Text>
+          <Text style={styles.title} numberOfLines={1}>{title || user?.full_name}</Text>
           {subtitle ? (
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
           ) : user?.role ? (
-            <Text style={styles.subtitle}>{user.role.toUpperCase()}</Text>
+            <View style={styles.rolePill}>
+              <Text style={styles.roleText}>{user.role.toUpperCase()}</Text>
+            </View>
           ) : null}
         </View>
       </View>
       {showLogout && (
-        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.75}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       )}
@@ -66,9 +68,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.glassHeaderBg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.glassBorderSubtle,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   userInfo: {
     flexDirection: 'row',
@@ -82,6 +89,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    shadowColor: Colors.shadowElevated,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   avatarText: {
     color: Colors.white,
@@ -93,8 +105,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.text,
+    letterSpacing: -0.2,
   },
   subtitle: {
     fontSize: 12,
@@ -102,17 +115,32 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 2,
   },
-  logoutBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  rolePill: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.glassPillBg,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: 8,
+    marginTop: 3,
+  },
+  roleText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: 0.5,
+  },
+  logoutBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 12,
+    backgroundColor: Colors.errorBg,
     borderWidth: 1,
-    borderColor: Colors.error,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
   },
   logoutText: {
     color: Colors.error,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

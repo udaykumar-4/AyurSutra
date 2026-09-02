@@ -75,7 +75,7 @@ export const PatientTreatmentRecommendationModal: React.FC<PatientTreatmentRecom
 
   const handleBookConsultation = () => {
     onClose();
-    // Phase 5 Navigation Adapter: Opens existing appointment booking flow cleanly
+    // Navigation Adapter: Opens existing appointment booking flow cleanly
     router.push('/patient/appointments');
   };
 
@@ -85,17 +85,19 @@ export const PatientTreatmentRecommendationModal: React.FC<PatientTreatmentRecom
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.headerRow}>
-            <Text style={styles.headerIcon}>🌿</Text>
+            <View style={styles.iconRing}>
+              <Text style={styles.headerIcon}>🌿</Text>
+            </View>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.modalTitle}>🌿 AI Treatment Recommendations</Text>
+              <Text style={styles.modalTitle}>AI Treatment Recommendations</Text>
               <Text style={styles.modalSubtitle}>Personalized Ayurvedic Therapy Guidance</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.75}>
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {/* Safety Notice */}
             <View style={styles.safetyNoticeCard}>
               <Text style={styles.safetyNoticeTitle}>ℹ️ EDUCATIONAL GUIDANCE ONLY</Text>
@@ -120,7 +122,7 @@ export const PatientTreatmentRecommendationModal: React.FC<PatientTreatmentRecom
                     key={option}
                     style={[styles.chip, isSelected && styles.chipSelected]}
                     onPress={() => toggleQuickOption(option)}
-                    activeOpacity={0.7}
+                    activeOpacity={0.8}
                   >
                     <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
                       {isSelected ? '✓ ' : '+ '}{option}
@@ -182,10 +184,12 @@ export const PatientTreatmentRecommendationModal: React.FC<PatientTreatmentRecom
 
                 {/* Therapy Recommendation Cards */}
                 {result.recommendations.map((rec, idx) => (
-                  <Card key={idx} style={styles.recommendationCard}>
+                  <Card key={idx} style={styles.recommendationCard} animate={true}>
                     <View style={styles.recHeaderRow}>
                       <Text style={styles.recTitle}>🌿 {rec.therapyName}</Text>
-                      <Text style={styles.recCategoryBadge}>{rec.category}</Text>
+                      <View style={styles.categoryBadge}>
+                        <Text style={styles.recCategoryText}>{rec.category}</Text>
+                      </View>
                     </View>
 
                     <Text style={styles.recDetail}>
@@ -261,27 +265,42 @@ export const PatientTreatmentRecommendationModal: React.FC<PatientTreatmentRecom
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: Colors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
-    maxHeight: '90%',
+    maxHeight: '92%',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 12,
+    marginBottom: 14,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.glassBorderSubtle,
+  },
+  iconRing: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.successBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   headerIcon: {
-    fontSize: 28,
-    marginRight: 10,
+    fontSize: 22,
   },
   headerTextContainer: {
     flex: 1,
@@ -290,52 +309,58 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: Colors.text,
+    letterSpacing: -0.2,
   },
   modalSubtitle: {
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+    fontWeight: '500',
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.background,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.glassPillBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeBtnText: {
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.textSecondary,
     fontWeight: '700',
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 32,
   },
   safetyNoticeCard: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: 'rgba(236, 253, 245, 0.85)',
+    borderRadius: 16,
+    padding: 14,
     marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
+    borderLeftColor: Colors.accent,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
   },
   safetyNoticeTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: Colors.primary,
+    color: Colors.accentDark,
     marginBottom: 4,
+    letterSpacing: 0.3,
   },
   safetyNoticeText: {
     fontSize: 12,
-    color: '#2E7D32',
-    lineHeight: 16,
+    color: '#065f46',
+    lineHeight: 17,
   },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '700',
     color: Colors.text,
-    marginBottom: 8,
+    marginBottom: 10,
+    letterSpacing: 0.2,
   },
   chipsContainer: {
     flexDirection: 'row',
@@ -343,18 +368,23 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   chip: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.glassPillBg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.glassBorderSubtle,
     borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
     marginRight: 8,
     marginBottom: 8,
   },
   chipSelected: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
+    shadowColor: Colors.shadowElevated,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   chipText: {
     fontSize: 12,
@@ -363,16 +393,19 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: Colors.white,
+    fontWeight: '700',
   },
   generateBtn: {
     marginTop: 8,
     marginBottom: 16,
   },
   errorCard: {
-    backgroundColor: '#FFEBEE',
-    borderRadius: 10,
+    backgroundColor: Colors.errorBg,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
   errorText: {
     color: Colors.error,
@@ -380,12 +413,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   emergencyCard: {
-    backgroundColor: '#FFEBEE',
-    borderRadius: 12,
+    backgroundColor: Colors.errorBg,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 5,
     borderLeftColor: Colors.error,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
   },
   emergencyTitle: {
     fontSize: 14,
@@ -395,27 +430,29 @@ const styles = StyleSheet.create({
   },
   emergencyText: {
     fontSize: 13,
-    color: '#C62828',
+    color: '#991b1b',
     lineHeight: 18,
   },
   prohibitedCard: {
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
+    backgroundColor: Colors.warningBg,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 16,
     borderLeftWidth: 4,
     borderLeftColor: Colors.warning,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.25)',
   },
   prohibitedTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: Colors.warning,
+    color: '#b45309',
     marginBottom: 4,
   },
   prohibitedText: {
     fontSize: 12,
-    color: '#E65100',
-    lineHeight: 16,
+    color: '#92400e',
+    lineHeight: 17,
   },
   resultsContainer: {
     marginTop: 8,
@@ -424,57 +461,63 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontStyle: 'italic',
     color: Colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   warningBox: {
-    backgroundColor: '#FFF8E1',
-    borderRadius: 10,
+    backgroundColor: Colors.warningBg,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#FFE082',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   warningTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#F57F17',
+    color: '#b45309',
     marginBottom: 4,
   },
   warningItem: {
     fontSize: 12,
-    color: '#F57F17',
+    color: '#b45309',
     marginBottom: 2,
   },
   recommendationCard: {
     marginBottom: 16,
-    borderColor: Colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: Colors.glassBorderSubtle,
   },
   recHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   recTitle: {
     fontSize: 16,
     fontWeight: '800',
     color: Colors.primary,
     flex: 1,
+    letterSpacing: -0.1,
   },
-  recCategoryBadge: {
+  categoryBadge: {
+    backgroundColor: Colors.successBg,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  recCategoryText: {
     fontSize: 10,
     fontWeight: '700',
-    backgroundColor: '#E8F5E9',
-    color: Colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    color: Colors.accentDark,
   },
   recDetail: {
     fontSize: 13,
     color: Colors.text,
     marginBottom: 6,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   boldLabel: {
     fontWeight: '700',
@@ -497,8 +540,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   referenceSection: {
-    marginTop: 6,
-    paddingTop: 6,
+    marginTop: 8,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
@@ -509,8 +552,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   cardFooter: {
-    marginTop: 12,
-    paddingTop: 10,
+    marginTop: 14,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     flexDirection: 'row',
