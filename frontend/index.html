@@ -113,8 +113,13 @@
 
             <!-- Tab 1: Appointments -->
             <div class="tab-content active" id="receptionistAppointments">
-                <h3>Appointments Schedule</h3>
-                <button class="btn btn-small" onclick="showBookAppointmentModal()" style="margin: 20px 0;">📅 Book Appointment for Patient</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">Appointments Schedule</h3>
+                    <div>
+                        <button class="btn btn-small" onclick="generateReceptionistReport()" style="margin-right: 10px;">📄 Export Daily Register & Billing PDF</button>
+                        <button class="btn btn-small" onclick="showBookAppointmentModal()">📅 Book Appointment for Patient</button>
+                    </div>
+                </div>
                 <div class="table-responsive-container">
                     <table class="table" id="receptionistScheduleTable">
                         <thead>
@@ -274,7 +279,10 @@
             </div>
 
             <div class="tab-content" id="adminReports">
-                <h3>Reports & Analytics</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Reports & Analytics</h3>
+                    <button class="btn btn-small" onclick="generateAdminReport()">📊 Export System Audit & Analytics PDF</button>
+                </div>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3 id="adminReportTotalPatients">0</h3>
@@ -564,7 +572,10 @@
             </div>
 
             <div class="tab-content active" id="therapistSessions">
-                <h3>Today's Therapy Sessions</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Today's Therapy Sessions</h3>
+                    <button class="btn btn-small" onclick="generateTherapistReport()">📄 Export Therapy Schedule PDF</button>
+                </div>
                 <div class="table-responsive-container">
                     <table class="table" id="todaySessionsTable">
                         <thead>

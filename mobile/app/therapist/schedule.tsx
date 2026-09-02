@@ -11,6 +11,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
+import pdfPrintUtils from '../../utils/pdfPrintUtils';
 import { Appointment, AppointmentStatus } from '../../types/appointment';
 import Colors from '../../constants/Colors';
 import Header from '../../components/Header';
@@ -80,6 +81,49 @@ export default function TherapistScheduleScreen() {
     }
   };
 
+  const generateScheduleHTML = () => {
+    return `
+      <html>
+        <head>
+          <style>
+            body { font-family: sans-serif; padding: 30px; color: #0f172a; }
+            h1 { color: #5b61f4; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+            .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+            .footer { margin-top: 30px; font-size: 11px; color: #64748b; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <h1>🧘 Therapist Daily Therapy Schedule</h1>
+          <p><strong>Therapist:</strong> ${user?.full_name || 'Therapist'} | <strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+          <p><strong>Total Sessions:</strong> ${appointments.length}</p>
+          ${appointments.map(a => `
+            <div class="card">
+              <strong>${new Date(a.appointment_date).toLocaleDateString()} ${a.appointment_time || ''}</strong><br/>
+              Treatment: ${a.treatment} | Patient: ${typeof a.patientId === 'object' ? a.patientId.full_name : 'Patient'}<br/>
+              Status: ${a.status.toUpperCase()}
+            </div>
+          `).join('') || '<p>No therapy sessions scheduled.</p>'}
+          <div class="footer">Confidential Schedule Document — AyurSutra Panchakarma Clinic</div>
+        </body>
+      </html>
+    `;
+  };
+
+  const handleExportPDF = () => {
+    pdfPrintUtils.exportPDF({
+      title: 'Therapist Daily Schedule',
+      htmlContent: generateScheduleHTML(),
+      fileName: `Therapist_Schedule_${(user?.full_name || 'Therapist').replace(/ /g, '_')}.pdf`,
+    });
+  };
+
+  const handlePrint = () => {
+    pdfPrintUtils.printReport({
+      title: 'Therapist Daily Schedule',
+      htmlContent: generateScheduleHTML(),
+    });
+  };
+
   if (authLoading || (loading && !refreshing)) {
     return <LoadingScreen message="Loading Therapy Schedule..." />;
   }
@@ -94,6 +138,19 @@ export default function TherapistScheduleScreen() {
   return (
     <View style={styles.container}>
       <Header title="Daily Therapy Schedule" subtitle="Session Timings & Appointments" showLogout={true} />
+
+      <Card style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1, marginRight: 10 }}>
+            <Text style={{ fontSize: 14, fontWeight: '800', color: Colors.text }}>🧘 Therapy Schedule Report</Text>
+            <Text style={{ fontSize: 11, color: Colors.textSecondary }}>Export or print assigned therapy sessions</Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <Button title="🖨️ Print" onPress={handlePrint} size="small" variant="outline" />
+            <Button title="💾 Export" onPress={handleExportPDF} size="small" variant="primary" />
+          </View>
+        </View>
+      </Card>
 
       {/* Segmented Filter Bar */}
       <View style={styles.tabBar}>

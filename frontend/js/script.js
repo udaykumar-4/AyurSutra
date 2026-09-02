@@ -2555,3 +2555,166 @@ function showUploadModal() {
     // This ID must match the ID in your index.html
     showModal('uploadReportModal');
 }
+
+// ⭐️ Universal PDF Preview & Print Handler for All Dashboards
+function showPdfPreview(doc, title, fileName) {
+    const pdfDataUri = doc.output('datauristring');
+    const iframe = document.getElementById('pdfPreviewFrame');
+    if (iframe) iframe.src = pdfDataUri;
+
+    const titleElem = document.getElementById('pdfPreviewTitle');
+    if (titleElem) titleElem.textContent = title;
+
+    const saveBtn = document.getElementById('pdfSaveBtn');
+    if (saveBtn) saveBtn.onclick = () => doc.save(fileName);
+
+    const printBtn = document.getElementById('pdfPrintBtn');
+    if (printBtn) {
+        printBtn.onclick = () => {
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.print();
+            } else {
+                window.print();
+            }
+        };
+    }
+
+    showModal('pdfPreviewModal');
+}
+
+// ⭐️ Therapist Daily Schedule Report (PDF + Print)
+async function generateTherapistReport() {
+    showNotification('Generating...', 'Compiling therapist schedule report.');
+    try {
+        const sessions = await authFetch(`${API_URL}/appointments?therapistId=${currentUser._id}`);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+
+        doc.setFontSize(22); doc.setTextColor(102, 126, 234);
+        doc.text('AyurSutra - Therapist Schedule Report', 20, y); y += 10;
+
+        doc.setFontSize(12); doc.setTextColor(0, 0, 0);
+        doc.text(`Therapist: ${currentUser.full_name}`, 20, y);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 140, y); y += 15;
+
+        const completed = sessions.filter(s => s.status === 'completed').length;
+        doc.setFontSize(16); doc.text('Therapy Sessions Summary', 20, y);
+        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
+
+        doc.text(`• Total Scheduled Sessions: ${sessions.length}`, 25, y); y += 7;
+        doc.text(`• Completed Sessions: ${completed}`, 25, y); y += 7;
+        doc.text(`• Remaining Sessions: ${sessions.length - completed}`, 25, y); y += 15;
+
+        doc.setFontSize(16); doc.text('Session List', 20, y);
+        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(10);
+
+        if (sessions.length === 0) {
+            doc.text('No therapy sessions assigned.', 25, y); y += 10;
+        } else {
+            sessions.forEach(s => {
+                if (y > 270) { doc.addPage(); y = 20; }
+                const pName = s.patientId ? s.patientId.full_name : 'Patient';
+                doc.text(`- ${formatDate(s.appointment_date)} (${s.appointment_time || 'Scheduled'}): ${s.treatment} for ${pName} [${(s.status || '').toUpperCase()}]`, 25, y);
+                y += 7;
+            });
+        }
+
+        showPdfPreview(doc, 'Therapist Schedule & Session Report', `Therapist_Schedule_${currentUser.full_name.replace(/ /g, '_')}.pdf`);
+    } catch (error) {
+        showNotification('Error', error.message, 'error');
+    }
+}
+
+// ⭐️ Receptionist Billing & Register Report (PDF + Print)
+async function generateReceptionistReport() {
+    showNotification('Generating...', 'Compiling receptionist billing & daily register report.');
+    try {
+        const appointments = await authFetch(`${API_URL}/appointments`);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+
+        doc.setFontSize(22); doc.setTextColor(245, 158, 11);
+        doc.text('AyurSutra - Receptionist Billing Report', 20, y); y += 10;
+
+        doc.setFontSize(12); doc.setTextColor(0, 0, 0);
+        doc.text(`Receptionist: ${currentUser.full_name}`, 20, y);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 140, y); y += 15;
+
+        const paid = appointments.filter(a => a.isPaid);
+        const totalRevenue = paid.reduce((sum, a) => sum + (a.cost || 0), 0);
+
+        doc.setFontSize(16); doc.text('Daily Financial Summary', 20, y);
+        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
+
+        doc.text(`• Total Appointments Handled: ${appointments.length}`, 25, y); y += 7;
+        doc.text(`• Settled Invoices: ${paid.length}`, 25, y); y += 7;
+        doc.text(`• Total Revenue Collected: ₹${totalRevenue}`, 25, y); y += 15;
+
+        doc.setFontSize(16); doc.text('Appointment & Payment Register', 20, y);
+        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(10);
+
+        appointments.slice(0, 15).forEach(a => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            const pName = a.patientId ? a.patientId.full_name : 'Patient';
+            const payStatus = a.isPaid ? 'PAID' : 'PENDING';
+            doc.text(`- ${formatDate(a.appointment_date)}: ${pName} - ${a.treatment} (₹${a.cost || 0}) [${payStatus}]`, 25, y);
+            y += 7;
+        });
+
+        showPdfPreview(doc, 'Receptionist Daily Register & Billing Report', 'Receptionist_Billing_Report.pdf');
+    } catch (error) {
+        showNotification('Error', error.message, 'error');
+    }
+}
+
+// ⭐️ Admin System Audit & Analytics Report (PDF + Print)
+async function generateAdminReport() {
+    showNotification('Generating...', 'Compiling clinic-wide system audit report.');
+    try {
+        const [users, appts, analytics] = await Promise.all([
+            authFetch(`${API_URL}/users`).catch(() => []),
+            authFetch(`${API_URL}/appointments`).catch(() => []),
+            authFetch(`${API_URL}/analytics/dashboard`).catch(() => null)
+        ]);
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+
+        doc.setFontSize(22); doc.setTextColor(91, 97, 244);
+        doc.text('AyurSutra - System Audit & Analytics Report', 20, y); y += 10;
+
+        doc.setFontSize(12); doc.setTextColor(0, 0, 0);
+        doc.text(`Administrator: ${currentUser.full_name}`, 20, y);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 140, y); y += 15;
+
+        doc.setFontSize(16); doc.text('Clinic Performance Metrics', 20, y);
+        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
+
+        const patientCount = users.filter(u => u.role === 'patient').length;
+        const doctorCount = users.filter(u => u.role === 'doctor').length;
+        const therapistCount = users.filter(u => u.role === 'therapist').length;
+        const paidAppts = appts.filter(a => a.isPaid);
+        const revenue = paidAppts.reduce((sum, a) => sum + (a.cost || 0), 0);
+
+        doc.text(`• Registered Patients: ${patientCount}`, 25, y); y += 7;
+        doc.text(`• Active Doctors: ${doctorCount}`, 25, y); y += 7;
+        doc.text(`• Certified Therapists: ${therapistCount}`, 25, y); y += 7;
+        doc.text(`• Total Appointments: ${appts.length}`, 25, y); y += 7;
+        doc.text(`• Revenue Collected: ₹${revenue}`, 25, y); y += 15;
+
+        if (analytics && analytics.patientReported) {
+            doc.setFontSize(16); doc.text('Patient Outcome Metrics', 20, y);
+            doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
+            doc.text(`• Average Overall Clinic Rating: ${analytics.patientReported.avgOverallRating || '5.0'} / 5.0`, 25, y); y += 7;
+            doc.text(`• Average Doctor Rating: ${analytics.patientReported.avgDoctorRating || '5.0'} / 5.0`, 25, y); y += 7;
+            doc.text(`• Average Therapist Rating: ${analytics.patientReported.avgTherapistRating || '5.0'} / 5.0`, 25, y); y += 15;
+        }
+
+        showPdfPreview(doc, 'System Audit & Analytics Report', 'AyurSutra_System_Audit_Report.pdf');
+    } catch (error) {
+        showNotification('Error', error.message, 'error');
+    }
+}

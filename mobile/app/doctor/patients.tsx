@@ -15,6 +15,7 @@ import userService from '../../services/userService';
 import appointmentService from '../../services/appointmentService';
 import prescriptionService from '../../services/prescriptionService';
 import noteService from '../../services/noteService';
+import pdfPrintUtils from '../../utils/pdfPrintUtils';
 import { User } from '../../types/user';
 import { Appointment } from '../../types/appointment';
 import { Prescription } from '../../types/prescription';
@@ -22,8 +23,8 @@ import { Note } from '../../types/note';
 import Colors from '../../constants/Colors';
 import Header from '../../components/Header';
 import Card from '../../components/Card';
-import Input from '../../components/Input';
 import Button from '../../components/Button';
+import Input from '../../components/Input';
 import ProgressBar from '../../components/ProgressBar';
 import LoadingScreen from '../../components/LoadingScreen';
 import ErrorView from '../../components/ErrorView';
@@ -132,6 +133,67 @@ export default function DoctorPatientsScreen() {
     }
   };
 
+  const generatePatientChartHTML = () => {
+    if (!selectedPatient) return '';
+    return `
+      <html>
+        <head>
+          <style>
+            body { font-family: sans-serif; padding: 30px; color: #0f172a; }
+            h1 { color: #5b61f4; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+            h2 { color: #0f172a; margin-top: 20px; font-size: 18px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+            .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+            .footer { margin-top: 30px; font-size: 11px; color: #64748b; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <h1>🩺 Patient Clinical History & Health Record</h1>
+          <p><strong>Doctor:</strong> ${user?.full_name || 'Doctor'} | <strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+          <div class="grid">
+            <div><strong>Patient Name:</strong> ${selectedPatient.full_name}</div>
+            <div><strong>Email:</strong> ${selectedPatient.email}</div>
+            <div><strong>Blood Group:</strong> ${selectedPatient.bloodGroup || 'N/A'}</div>
+            <div><strong>Condition:</strong> ${selectedPatient.condition || 'General Wellness'}</div>
+            <div><strong>Allergies:</strong> ${selectedPatient.allergies || 'None reported'}</div>
+            <div><strong>Vitals:</strong> BP (${selectedPatient.bloodPressure || 'N/A'}), HR (${selectedPatient.heartRate || 'N/A'})</div>
+          </div>
+          <h2>Prescriptions (${patientRxs.length})</h2>
+          ${patientRxs.map(rx => `
+            <div class="card">
+              <strong>${rx.treatment}</strong> (${rx.status})<br/>
+              Progress: ${rx.progressCompleted} / ${rx.duration} sessions
+            </div>
+          `).join('') || '<p>No prescriptions recorded.</p>'}
+          <h2>Clinical Consultation Notes (${patientNotes.length})</h2>
+          ${patientNotes.map(n => `
+            <div class="card">
+              <strong>${new Date(n.createdAt || Date.now()).toLocaleDateString()}:</strong> ${n.note}
+            </div>
+          `).join('') || '<p>No clinical notes recorded.</p>'}
+          <div class="footer">Confidential Clinical Document — AyurSutra Health Record</div>
+        </body>
+      </html>
+    `;
+  };
+
+  const handleExportPatientPDF = () => {
+    if (!selectedPatient) return;
+    pdfPrintUtils.exportPDF({
+      title: `Clinical Chart - ${selectedPatient.full_name}`,
+      htmlContent: generatePatientChartHTML(),
+      fileName: `Patient_Record_${selectedPatient.full_name.replace(/ /g, '_')}.pdf`,
+    });
+  };
+
+  const handlePrintPatientChart = () => {
+    if (!selectedPatient) return;
+    pdfPrintUtils.printReport({
+      title: `Clinical Chart - ${selectedPatient.full_name}`,
+      htmlContent: generatePatientChartHTML(),
+    });
+  };
+
   if (authLoading || (loading && !refreshing)) {
     return <LoadingScreen message="Loading Patient Chart Directory..." />;
   }
@@ -237,7 +299,21 @@ export default function DoctorPatientsScreen() {
                       style={[styles.aiBarBtn, { backgroundColor: Colors.secondary }]}
                       onPress={() => setShowPredictionModal(true)}
                     >
-                      <Text style={styles.aiBarBtnText}>🔮 Disease Prediction</Text>
+                      <Text style={styles.aiBarBtnText}>🔮 Prediction</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.aiBarBtn, { backgroundColor: Colors.accent }]}
+                      onPress={handlePrintPatientChart}
+                    >
+                      <Text style={styles.aiBarBtnText}>🖨️ Print</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.aiBarBtn, { backgroundColor: Colors.primaryDark }]}
+                      onPress={handleExportPatientPDF}
+                    >
+                      <Text style={styles.aiBarBtnText}>💾 PDF</Text>
                     </TouchableOpacity>
                   </View>
 
