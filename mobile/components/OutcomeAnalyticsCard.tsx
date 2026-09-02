@@ -111,7 +111,7 @@ export const OutcomeAnalyticsCard: React.FC<OutcomeAnalyticsCardProps> = ({
       {/* 1. Operational Metrics */}
       {operational && (
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>📈 Operational Performance</Text>
+          <Text style={styles.sectionHeader}>Operational Performance</Text>
           <View style={styles.grid}>
             <View style={styles.metricItem}>
               <Text style={styles.metricValue}>{operational.totalAppointments}</Text>
@@ -149,7 +149,7 @@ export const OutcomeAnalyticsCard: React.FC<OutcomeAnalyticsCardProps> = ({
       {/* 2. Treatment Adherence & Progress */}
       {adherence && (
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>🌿 Treatment Adherence & Progress</Text>
+          <Text style={styles.sectionHeader}>Treatment Adherence & Progress</Text>
           <View style={styles.progressRow}>
             <Text style={styles.progressLabel}>Session Completion Adherence</Text>
             <Text style={styles.progressValue}>{adherence.adherenceRate}%</Text>
@@ -170,7 +170,7 @@ export const OutcomeAnalyticsCard: React.FC<OutcomeAnalyticsCardProps> = ({
       {/* 3. Patient-Reported Outcomes */}
       {patientReported && (
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>⭐ Patient-Reported Outcomes</Text>
+          <Text style={styles.sectionHeader}>Patient-Reported Outcomes</Text>
           <View style={styles.grid}>
             {patientReported.avgOverallRating !== undefined && patientReported.avgOverallRating > 0 && (
               <View style={styles.metricItem}>
@@ -203,7 +203,7 @@ export const OutcomeAnalyticsCard: React.FC<OutcomeAnalyticsCardProps> = ({
       {/* 4. Clinical Vitals Outcomes (Only rendered if empirical DB vitals exist) */}
       {clinical && clinical.hasVitalsData && clinical.vitals && (
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>❤️ Recorded Clinical Vitals</Text>
+          <Text style={styles.sectionHeader}>Recorded Clinical Vitals</Text>
           <View style={styles.vitalsGrid}>
             {clinical.vitals.bloodPressure && (
               <View style={styles.vitalChip}>

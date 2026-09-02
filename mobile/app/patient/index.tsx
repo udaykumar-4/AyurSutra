@@ -120,23 +120,15 @@ export default function PatientHomeScreen() {
       >
         {error ? <ErrorView message={error} onRetry={fetchData} /> : null}
 
-        {/* Profile & Health Summary Banner */}
-        <Card style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <View style={styles.avatarLarge}>
-              <Text style={styles.avatarTextLarge}>{user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'P'}</Text>
-            </View>
-            <View style={styles.summaryDetails}>
-              <Text style={styles.summaryName}>{user?.full_name}</Text>
-              <Text style={styles.summarySub}>
-                {user?.age ? `${user.age} yrs` : 'Age N/A'} • {user?.gender || 'Gender N/A'} • Blood: {user?.bloodGroup || 'N/A'}
-              </Text>
-              {user?.condition ? (
-                <Text style={styles.conditionText}>Diagnosis: {user.condition}</Text>
-              ) : null}
-            </View>
-          </View>
-        </Card>
+        {/* Compact Health Vitals Bar (Consolidated to avoid header redundancy) */}
+        <View style={styles.vitalsBar}>
+          <Text style={styles.vitalsBarText}>
+            Age: {user?.age || 'N/A'} • Gender: {user?.gender || 'N/A'} • Blood: {user?.bloodGroup || 'N/A'}
+          </Text>
+          {user?.condition ? (
+            <Text style={styles.vitalsConditionText}>Clinical Focus: {user.condition}</Text>
+          ) : null}
+        </View>
 
         {/* 🌟 PHASE 3 ADDITIVE FEATURE: AI Wellness Assistant Floating Banner */}
         <TouchableOpacity
@@ -196,14 +188,12 @@ export default function PatientHomeScreen() {
             </View>
           </Card>
         ) : (
-          <Card style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🌿</Text>
-            <Text style={styles.emptyTitle}>No Active Panchakarma Plan</Text>
-            <Text style={styles.emptyDesc}>Schedule a consultation with a doctor to begin your personalized Ayurvedic therapy.</Text>
-          </Card>
+          <View style={styles.emptyInlineContainer}>
+            <Text style={styles.emptyInlineText}>No active Panchakarma plan assigned.</Text>
+          </View>
         )}
 
-        {/* PHASE 1 ADDITIVE FEATURE: Personal Outcome Analytics Dashboard */}
+        {/* Personal Outcome Analytics Dashboard */}
         <OutcomeAnalyticsCard role="patient" />
 
         {/* Today's Appointments Section */}
@@ -224,9 +214,9 @@ export default function PatientHomeScreen() {
             </Card>
           ))
         ) : (
-          <Card style={styles.subCard}>
-            <Text style={styles.noApptText}>No appointments scheduled for today.</Text>
-          </Card>
+          <View style={styles.emptyInlineContainer}>
+            <Text style={styles.emptyInlineText}>No appointments scheduled for today.</Text>
+          </View>
         )}
 
         {/* Upcoming Appointments Section */}
@@ -249,9 +239,9 @@ export default function PatientHomeScreen() {
             </Card>
           ))
         ) : (
-          <Card style={styles.subCard}>
-            <Text style={styles.noApptText}>No upcoming appointments scheduled.</Text>
-          </Card>
+          <View style={styles.emptyInlineContainer}>
+            <Text style={styles.emptyInlineText}>No upcoming appointments scheduled.</Text>
+          </View>
         )}
 
         {/* Notifications & Tips */}
@@ -331,47 +321,41 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
-  summaryCard: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.border,
+  vitalsBar: {
+    backgroundColor: Colors.glassBg,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.glassBorderSubtle,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarLarge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  avatarTextLarge: {
-    color: Colors.white,
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  summaryDetails: {
-    flex: 1,
-  },
-  summaryName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.text,
-  },
-  summarySub: {
+  vitalsBarText: {
     fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  conditionText: {
-    fontSize: 12,
-    color: Colors.primary,
     fontWeight: '600',
-    marginTop: 4,
+    color: Colors.textSecondary,
+  },
+  vitalsConditionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primary,
+    marginTop: 2,
+  },
+  emptyInlineContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    marginVertical: 6,
+    backgroundColor: Colors.glassPillBg,
+  },
+  emptyInlineText: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    fontWeight: '500',
   },
   aiChatCard: {
     flexDirection: 'row',

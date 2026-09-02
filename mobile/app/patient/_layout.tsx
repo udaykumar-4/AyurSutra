@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import Colors from '../../constants/Colors';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native';
 
 export default function PatientLayout() {
   return (
@@ -28,8 +28,9 @@ export default function PatientLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6 }}>🏡</Text>
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.6 }} aria-hidden={true}>🏠</Text>
           ),
         }}
       />
@@ -37,8 +38,9 @@ export default function PatientLayout() {
         name="appointments"
         options={{
           title: 'Appointments',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6 }}>📅</Text>
+          tabBarLabel: 'Appointments',
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.6 }} aria-hidden={true}>📅</Text>
           ),
         }}
       />
@@ -46,8 +48,9 @@ export default function PatientLayout() {
         name="treatment"
         options={{
           title: 'Treatment',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6 }}>🌿</Text>
+          tabBarLabel: 'Treatment',
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.6 }} aria-hidden={true}>🌿</Text>
           ),
         }}
       />
@@ -55,8 +58,9 @@ export default function PatientLayout() {
         name="report"
         options={{
           title: 'Reports',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6 }}>📊</Text>
+          tabBarLabel: 'Reports',
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.6 }} aria-hidden={true}>📊</Text>
           ),
         }}
       />
@@ -64,15 +68,16 @@ export default function PatientLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6 }}>👤</Text>
+          tabBarLabel: 'Profile',
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.6 }} aria-hidden={true}>👤</Text>
           ),
         }}
       />
       <Tabs.Screen
         name="feedback"
         options={{
-          href: null, // Hidden from bottom tab bar, accessed via quick action or button
+          href: null,
         }}
       />
     </Tabs>
