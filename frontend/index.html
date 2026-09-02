@@ -88,7 +88,10 @@
                     <div class="current-time">11:30 AM</div>
                     <div class="current-date">Saturday, Nov 15, 2025</div>
                 </div>
-                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-small" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin: 0;" onclick="exportReceptionistReport()">📄 Export PDF Report</button>
+                    <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -113,13 +116,8 @@
 
             <!-- Tab 1: Appointments -->
             <div class="tab-content active" id="receptionistAppointments">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0;">Appointments Schedule</h3>
-                    <div>
-                        <button class="btn btn-small" onclick="generateReceptionistReport()" style="margin-right: 10px;">📄 Export Daily Register & Billing PDF</button>
-                        <button class="btn btn-small" onclick="showBookAppointmentModal()">📅 Book Appointment for Patient</button>
-                    </div>
-                </div>
+                <h3>Appointments Schedule</h3>
+                <button class="btn btn-small" onclick="showBookAppointmentModal()" style="margin: 20px 0;">📅 Book Appointment for Patient</button>
                 <div class="table-responsive-container">
                     <table class="table" id="receptionistScheduleTable">
                         <thead>
@@ -175,7 +173,10 @@
                     <div class="current-time">11:30 AM</div>
                     <div class="current-date">Saturday, Nov 15, 2025</div>
                 </div>
-                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-small" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin: 0;" onclick="exportAdminReport()">📄 Export PDF Report</button>
+                    <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -279,10 +280,7 @@
             </div>
 
             <div class="tab-content" id="adminReports">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0;">Reports & Analytics</h3>
-                    <button class="btn btn-small" onclick="generateAdminReport()">📊 Export System Audit & Analytics PDF</button>
-                </div>
+                <h3>Reports & Analytics</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3 id="adminReportTotalPatients">0</h3>
@@ -377,7 +375,10 @@
                     <div class="current-time">11:30 AM</div>
                     <div class="current-date">Saturday, Nov 15, 2025</div>
                 </div>
-                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-small" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin: 0;" onclick="exportDoctorReport()">📄 Export PDF Report</button>
+                    <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -543,7 +544,10 @@
                     <div class="current-time">11:30 AM</div>
                     <div class="current-date">Saturday, Nov 15, 2025</div>
                 </div>
-                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-small" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin: 0;" onclick="exportTherapistReport()">📄 Export PDF Report</button>
+                    <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -572,10 +576,7 @@
             </div>
 
             <div class="tab-content active" id="therapistSessions">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0;">Today's Therapy Sessions</h3>
-                    <button class="btn btn-small" onclick="generateTherapistReport()">📄 Export Therapy Schedule PDF</button>
-                </div>
+                <h3>Today's Therapy Sessions</h3>
                 <div class="table-responsive-container">
                     <table class="table" id="todaySessionsTable">
                         <thead>
@@ -645,7 +646,10 @@
                     <div class="current-time">11:30 AM</div>
                     <div class="current-date">Saturday, Nov 15, 2025</div>
                 </div>
-                <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-small" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin: 0;" onclick="exportPatientReport()">📄 Export PDF Report</button>
+                    <button class="back-btn" style="color: red; border-color: red;" onclick="logout()">Logout</button>
+                </div>
             </div>
 
             <div class="stats-grid" id="patientStatsGrid">

@@ -11,7 +11,6 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
-import pdfPrintUtils from '../../utils/pdfPrintUtils';
 import { Appointment } from '../../types/appointment';
 import Colors from '../../constants/Colors';
 import Header from '../../components/Header';
@@ -80,49 +79,6 @@ export default function ReceptionistPaymentsScreen() {
     }
   };
 
-  const generateBillingHTML = () => {
-    return `
-      <html>
-        <head>
-          <style>
-            body { font-family: sans-serif; padding: 30px; color: #0f172a; }
-            h1 { color: #f59e0b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-            .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
-            .footer { margin-top: 30px; font-size: 11px; color: #64748b; text-align: center; }
-          </style>
-        </head>
-        <body>
-          <h1>🛎️ Receptionist Daily Billing & Register Report</h1>
-          <p><strong>Receptionist:</strong> ${user?.full_name || 'Receptionist'} | <strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-          <p><strong>Total Paid Revenue Settled:</strong> ₹${totalPaidRevenue} | <strong>Pending Collection:</strong> ₹${totalPendingBilling}</p>
-          ${appointments.map(a => `
-            <div class="card">
-              <strong>${new Date(a.appointment_date).toLocaleDateString()} ${a.appointment_time || ''}</strong><br/>
-              Patient: ${typeof a.patientId === 'object' ? a.patientId.full_name : 'Patient'} | Treatment: ${a.treatment}<br/>
-              Amount: ₹${a.cost || 1500} | Status: <strong>${a.isPaid ? 'PAID' : 'PENDING'}</strong>
-            </div>
-          `).join('') || '<p>No billing records found.</p>'}
-          <div class="footer">Confidential Financial Document — AyurSutra Cashier Desk</div>
-        </body>
-      </html>
-    `;
-  };
-
-  const handleExportPDF = () => {
-    pdfPrintUtils.exportPDF({
-      title: 'Receptionist Billing Report',
-      htmlContent: generateBillingHTML(),
-      fileName: 'Receptionist_Billing_Report.pdf',
-    });
-  };
-
-  const handlePrint = () => {
-    pdfPrintUtils.printReport({
-      title: 'Receptionist Billing Report',
-      htmlContent: generateBillingHTML(),
-    });
-  };
-
   if (authLoading || (loading && !refreshing)) {
     return <LoadingScreen message="Loading Billing & Cash Desk..." />;
   }
@@ -149,20 +105,6 @@ export default function ReceptionistPaymentsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
       >
         {error ? <ErrorView message={error} onRetry={fetchData} /> : null}
-
-        {/* Action Header Card */}
-        <Card style={{ marginBottom: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flex: 1, marginRight: 10 }}>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: Colors.text }}>🛎️ Billing & Register Report</Text>
-              <Text style={{ fontSize: 11, color: Colors.textSecondary }}>Export or print settlement records</Text>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-              <Button title="🖨️ Print" onPress={handlePrint} size="small" variant="outline" />
-              <Button title="💾 Export" onPress={handleExportPDF} size="small" variant="primary" />
-            </View>
-          </View>
-        </Card>
 
         {/* Revenue Summary Grid */}
         <View style={styles.statsGrid}>

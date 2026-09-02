@@ -11,7 +11,6 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import reportService, { PatientReportData } from '../../services/reportService';
-import pdfPrintUtils from '../../utils/pdfPrintUtils';
 import Colors from '../../constants/Colors';
 import Header from '../../components/Header';
 import Card from '../../components/Card';
@@ -59,61 +58,11 @@ export default function PatientReportScreen() {
     fetchData();
   };
 
-  const generateReportHTML = () => {
-    const pName = patient?.full_name || 'Patient';
-    return `
-      <html>
-        <head>
-          <style>
-            body { font-family: sans-serif; padding: 30px; color: #1e293b; }
-            h1 { color: #5b61f4; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-            h2 { color: #0f172a; margin-top: 20px; font-size: 18px; }
-            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-            .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
-            .footer { margin-top: 30px; font-size: 11px; color: #64748b; text-align: center; }
-          </style>
-        </head>
-        <body>
-          <h1>🌿 AyurSutra Patient Health Report</h1>
-          <p><strong>Date:</strong> ${new Date().toLocaleDateString()} | <strong>Patient:</strong> ${pName}</p>
-          <div class="info-grid">
-            <div><strong>Email:</strong> ${patient?.email || 'N/A'}</div>
-            <div><strong>Assigned Doctor:</strong> ${docName}</div>
-            <div><strong>Condition:</strong> ${patient?.condition || 'General Wellness'}</div>
-            <div><strong>Allergies:</strong> ${patient?.allergies || 'None reported'}</div>
-          </div>
-          <h2>Panchakarma Prescriptions (${reportData?.prescriptions.length || 0})</h2>
-          ${(reportData?.prescriptions || []).map(rx => `
-            <div class="card">
-              <strong>${rx.treatment}</strong> (${rx.status})<br/>
-              Progress: ${rx.progressCompleted} / ${rx.duration} sessions | Prescribed by: Dr. ${typeof rx.doctorId === 'object' ? rx.doctorId.full_name : 'Doctor'}
-            </div>
-          `).join('') || '<p>No prescriptions recorded.</p>'}
-          <h2>Appointments (${reportData?.appointments.length || 0})</h2>
-          ${(reportData?.appointments || []).map(a => `
-            <div class="card">
-              ${new Date(a.appointment_date).toLocaleDateString()}: ${a.treatment} (${a.status})
-            </div>
-          `).join('') || '<p>No appointments recorded.</p>'}
-          <div class="footer">Confidential Medical Document — AyurSutra Panchakarma Clinic</div>
-        </body>
-      </html>
-    `;
-  };
-
   const handleExportPDF = () => {
-    pdfPrintUtils.exportPDF({
-      title: 'My AyurSutra Health Report',
-      htmlContent: generateReportHTML(),
-      fileName: `AyurSutra_Report_${(patient?.full_name || 'Patient').replace(/ /g, '_')}.pdf`,
-    });
-  };
-
-  const handlePrint = () => {
-    pdfPrintUtils.printReport({
-      title: 'My AyurSutra Health Report',
-      htmlContent: generateReportHTML(),
-    });
+    Alert.alert(
+      'Medical Summary Ready',
+      `Full report summary for ${reportData?.user.full_name || 'Patient'} loaded.\nTotal Appointments: ${reportData?.appointments.length || 0}\nPrescriptions: ${reportData?.prescriptions.length || 0}`
+    );
   };
 
   if (authLoading || (loading && !refreshing)) {
@@ -136,24 +85,16 @@ export default function PatientReportScreen() {
         {/* Action Header Banner */}
         <Card style={styles.bannerCard}>
           <View style={styles.bannerRow}>
-            <View style={{ flex: 1, marginRight: 10 }}>
+            <View style={{ flex: 1 }}>
               <Text style={styles.bannerTitle}>📄 Patient Health Report</Text>
               <Text style={styles.bannerSub}>Complete history of consultations, prescriptions, and notes.</Text>
             </View>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-              <Button
-                title="🖨️ Print"
-                onPress={handlePrint}
-                size="small"
-                variant="outline"
-              />
-              <Button
-                title="💾 Export"
-                onPress={handleExportPDF}
-                size="small"
-                variant="primary"
-              />
-            </View>
+            <Button
+              title="Export"
+              onPress={handleExportPDF}
+              size="small"
+              variant="outline"
+            />
           </View>
         </Card>
 

@@ -2535,13 +2535,9 @@ function filterDoctorPatients() {
     const rows = tbody.getElementsByTagName('tr');
 
     for (let i = 0; i < rows.length; i++) {
-        // Get the first cell (Patient Name)
         const nameColumn = rows[i].getElementsByTagName('td')[0];
-        
         if (nameColumn) {
             const nameText = nameColumn.textContent || nameColumn.innerText;
-            
-            // If the name contains the search text, show it; otherwise, hide it
             if (nameText.toLowerCase().indexOf(filter) > -1) {
                 rows[i].style.display = "";
             } else {
@@ -2550,171 +2546,257 @@ function filterDoctorPatients() {
         }
     }
 }
+
 // Opens the upload modal
 function showUploadModal() {
-    // This ID must match the ID in your index.html
     showModal('uploadReportModal');
 }
 
-// ⭐️ Universal PDF Preview & Print Handler for All Dashboards
-function showPdfPreview(doc, title, fileName) {
-    const pdfDataUri = doc.output('datauristring');
-    const iframe = document.getElementById('pdfPreviewFrame');
-    if (iframe) iframe.src = pdfDataUri;
+// ==========================================
+// UNIFIED PDF EXPORT & PRINT PREVIEW FUNCTIONS (ALL 5 DASHBOARDS)
+// ==========================================
 
-    const titleElem = document.getElementById('pdfPreviewTitle');
-    if (titleElem) titleElem.textContent = title;
-
-    const saveBtn = document.getElementById('pdfSaveBtn');
-    if (saveBtn) saveBtn.onclick = () => doc.save(fileName);
-
-    const printBtn = document.getElementById('pdfPrintBtn');
-    if (printBtn) {
-        printBtn.onclick = () => {
-            if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.print();
-            } else {
-                window.print();
-            }
-        };
-    }
-
-    showModal('pdfPreviewModal');
+function exportDoctorReport() {
+    generatePDFReport();
 }
 
-// ⭐️ Therapist Daily Schedule Report (PDF + Print)
-async function generateTherapistReport() {
-    showNotification('Generating...', 'Compiling therapist schedule report.');
+async function exportPatientReport() {
+    showNotification('Generating...', 'Compiling patient health and treatment report.');
     try {
-        const sessions = await authFetch(`${API_URL}/appointments?therapistId=${currentUser._id}`);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        let y = 20;
-
-        doc.setFontSize(22); doc.setTextColor(102, 126, 234);
-        doc.text('AyurSutra - Therapist Schedule Report', 20, y); y += 10;
-
-        doc.setFontSize(12); doc.setTextColor(0, 0, 0);
-        doc.text(`Therapist: ${currentUser.full_name}`, 20, y);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 140, y); y += 15;
-
-        const completed = sessions.filter(s => s.status === 'completed').length;
-        doc.setFontSize(16); doc.text('Therapy Sessions Summary', 20, y);
-        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
-
-        doc.text(`• Total Scheduled Sessions: ${sessions.length}`, 25, y); y += 7;
-        doc.text(`• Completed Sessions: ${completed}`, 25, y); y += 7;
-        doc.text(`• Remaining Sessions: ${sessions.length - completed}`, 25, y); y += 15;
-
-        doc.setFontSize(16); doc.text('Session List', 20, y);
-        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(10);
-
-        if (sessions.length === 0) {
-            doc.text('No therapy sessions assigned.', 25, y); y += 10;
-        } else {
-            sessions.forEach(s => {
-                if (y > 270) { doc.addPage(); y = 20; }
-                const pName = s.patientId ? s.patientId.full_name : 'Patient';
-                doc.text(`- ${formatDate(s.appointment_date)} (${s.appointment_time || 'Scheduled'}): ${s.treatment} for ${pName} [${(s.status || '').toUpperCase()}]`, 25, y);
-                y += 7;
-            });
-        }
-
-        showPdfPreview(doc, 'Therapist Schedule & Session Report', `Therapist_Schedule_${currentUser.full_name.replace(/ /g, '_')}.pdf`);
-    } catch (error) {
-        showNotification('Error', error.message, 'error');
-    }
-}
-
-// ⭐️ Receptionist Billing & Register Report (PDF + Print)
-async function generateReceptionistReport() {
-    showNotification('Generating...', 'Compiling receptionist billing & daily register report.');
-    try {
-        const appointments = await authFetch(`${API_URL}/appointments`);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        let y = 20;
-
-        doc.setFontSize(22); doc.setTextColor(245, 158, 11);
-        doc.text('AyurSutra - Receptionist Billing Report', 20, y); y += 10;
-
-        doc.setFontSize(12); doc.setTextColor(0, 0, 0);
-        doc.text(`Receptionist: ${currentUser.full_name}`, 20, y);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 140, y); y += 15;
-
-        const paid = appointments.filter(a => a.isPaid);
-        const totalRevenue = paid.reduce((sum, a) => sum + (a.cost || 0), 0);
-
-        doc.setFontSize(16); doc.text('Daily Financial Summary', 20, y);
-        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
-
-        doc.text(`• Total Appointments Handled: ${appointments.length}`, 25, y); y += 7;
-        doc.text(`• Settled Invoices: ${paid.length}`, 25, y); y += 7;
-        doc.text(`• Total Revenue Collected: ₹${totalRevenue}`, 25, y); y += 15;
-
-        doc.setFontSize(16); doc.text('Appointment & Payment Register', 20, y);
-        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(10);
-
-        appointments.slice(0, 15).forEach(a => {
-            if (y > 270) { doc.addPage(); y = 20; }
-            const pName = a.patientId ? a.patientId.full_name : 'Patient';
-            const payStatus = a.isPaid ? 'PAID' : 'PENDING';
-            doc.text(`- ${formatDate(a.appointment_date)}: ${pName} - ${a.treatment} (₹${a.cost || 0}) [${payStatus}]`, 25, y);
-            y += 7;
-        });
-
-        showPdfPreview(doc, 'Receptionist Daily Register & Billing Report', 'Receptionist_Billing_Report.pdf');
-    } catch (error) {
-        showNotification('Error', error.message, 'error');
-    }
-}
-
-// ⭐️ Admin System Audit & Analytics Report (PDF + Print)
-async function generateAdminReport() {
-    showNotification('Generating...', 'Compiling clinic-wide system audit report.');
-    try {
-        const [users, appts, analytics] = await Promise.all([
-            authFetch(`${API_URL}/users`).catch(() => []),
-            authFetch(`${API_URL}/appointments`).catch(() => []),
-            authFetch(`${API_URL}/analytics/dashboard`).catch(() => null)
+        const [appointments, prescriptions, notes] = await Promise.all([
+            authFetch(`${API_URL}/appointments`),
+            authFetch(`${API_URL}/prescriptions/patient/${currentUser._id}`).catch(() => []),
+            authFetch(`${API_URL}/notes/patient/${currentUser._id}`).catch(() => [])
         ]);
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         let y = 20;
 
-        doc.setFontSize(22); doc.setTextColor(91, 97, 244);
-        doc.text('AyurSutra - System Audit & Analytics Report', 20, y); y += 10;
+        doc.setFontSize(22);
+        doc.setTextColor(40, 167, 69);
+        doc.text('AyurSutra - Patient Health & Treatment Report', 20, y);
+        y += 10;
 
-        doc.setFontSize(12); doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Patient: ${currentUser.full_name} (${currentUser.email})`, 20, y);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 140, y);
+        y += 12;
+
+        doc.setFontSize(14);
+        doc.text('Medical & Vitals Profile', 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 10;
+
+        doc.setFontSize(10);
+        doc.text(`• Age / Gender: ${currentUser.age || 'N/A'} / ${currentUser.gender || 'N/A'}`, 25, y); y += 6;
+        doc.text(`• Recorded Condition: ${currentUser.condition || 'General Wellness'}`, 25, y); y += 6;
+        doc.text(`• Recorded Allergies: ${currentUser.allergies || 'None Logged'}`, 25, y); y += 10;
+
+        doc.setFontSize(14);
+        doc.text('Active Panchakarma Protocols & Prescriptions', 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 10;
+        doc.setFontSize(10);
+
+        if (!prescriptions || prescriptions.length === 0) {
+            doc.text('No active prescriptions on record.', 25, y); y += 8;
+        } else {
+            prescriptions.forEach(p => {
+                if (y > 260) { doc.addPage(); y = 20; }
+                const docName = p.doctorId ? p.doctorId.full_name : 'Physician';
+                doc.text(`Protocol: ${p.treatment} (${p.status.toUpperCase()})`, 25, y); y += 5;
+                doc.text(`Doctor: ${docName} | Progress: ${p.progressCompleted || 0}/${p.duration || 0} sessions`, 25, y); y += 8;
+            });
+        }
+
+        const pdfDataUri = doc.output('datauristring');
+        document.getElementById('pdfPreviewFrame').src = pdfDataUri;
+        document.getElementById('pdfPreviewTitle').textContent = `Patient Report: ${currentUser.full_name}`;
+        
+        const saveName = `Patient_Report_${currentUser.full_name.replace(/\s+/g, '_')}.pdf`;
+        document.getElementById('pdfSaveBtn').onclick = () => doc.save(saveName);
+        document.getElementById('pdfPrintBtn').onclick = () => {
+            const iframe = document.getElementById('pdfPreviewFrame');
+            if (iframe.contentWindow) iframe.contentWindow.print();
+        };
+
+        showModal('pdfPreviewModal');
+    } catch (err) {
+        showNotification('Error', 'Failed to generate patient report: ' + err.message, 'error');
+    }
+}
+
+async function exportTherapistReport() {
+    showNotification('Generating...', 'Compiling therapist daily therapy roster.');
+    try {
+        const appointments = await authFetch(`${API_URL}/appointments`).catch(() => []);
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+
+        doc.setFontSize(22);
+        doc.setTextColor(40, 167, 69);
+        doc.text('AyurSutra - Therapist Session Roster', 20, y);
+        y += 10;
+
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Therapist: ${currentUser.full_name}`, 20, y);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 140, y);
+        y += 15;
+
+        doc.setFontSize(14);
+        doc.text('Assigned Panchakarma Sessions', 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 10;
+        doc.setFontSize(10);
+
+        if (!appointments || appointments.length === 0) {
+            doc.text('No appointments scheduled.', 25, y);
+        } else {
+            appointments.forEach(app => {
+                if (y > 260) { doc.addPage(); y = 20; }
+                const patientName = app.patientId ? app.patientId.full_name : 'Patient';
+                const date = formatDate(app.appointment_date);
+                doc.text(`${date} - ${formatTime(app.appointment_time)}: ${patientName} (${app.treatment}) - Status: ${app.status.toUpperCase()}`, 25, y);
+                y += 8;
+            });
+        }
+
+        const pdfDataUri = doc.output('datauristring');
+        document.getElementById('pdfPreviewFrame').src = pdfDataUri;
+        document.getElementById('pdfPreviewTitle').textContent = `Therapist Schedule: ${currentUser.full_name}`;
+        
+        const saveName = `Therapist_Schedule_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.getElementById('pdfSaveBtn').onclick = () => doc.save(saveName);
+        document.getElementById('pdfPrintBtn').onclick = () => {
+            const iframe = document.getElementById('pdfPreviewFrame');
+            if (iframe.contentWindow) iframe.contentWindow.print();
+        };
+
+        showModal('pdfPreviewModal');
+    } catch (err) {
+        showNotification('Error', 'Failed to generate therapist report: ' + err.message, 'error');
+    }
+}
+
+async function exportReceptionistReport() {
+    showNotification('Generating...', 'Compiling daily front desk & billing register.');
+    try {
+        const appointments = await authFetch(`${API_URL}/appointments`).catch(() => []);
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+
+        doc.setFontSize(22);
+        doc.setTextColor(40, 167, 69);
+        doc.text('AyurSutra - Receptionist Daily Register', 20, y);
+        y += 10;
+
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Front Desk Staff: ${currentUser.full_name}`, 20, y);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 140, y);
+        y += 15;
+
+        doc.setFontSize(14);
+        doc.text('Appointments & Invoice Roster', 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 10;
+        doc.setFontSize(10);
+
+        let totalRevenue = 0;
+
+        if (!appointments || appointments.length === 0) {
+            doc.text('No appointments logged for today.', 25, y);
+        } else {
+            appointments.forEach(app => {
+                if (y > 260) { doc.addPage(); y = 20; }
+                const patientName = app.patientId ? app.patientId.full_name : 'Patient';
+                const date = formatDate(app.appointment_date);
+                const cost = app.cost || 0;
+                if (app.isPaid) totalRevenue += cost;
+                doc.text(`${date} ${formatTime(app.appointment_time)} | ${patientName} | ${app.treatment} | Fee: ₹${cost} | Paid: ${app.isPaid ? 'YES' : 'NO'}`, 25, y);
+                y += 8;
+            });
+            y += 5;
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Total Collected Revenue: ₹${totalRevenue}`, 25, y);
+        }
+
+        const pdfDataUri = doc.output('datauristring');
+        document.getElementById('pdfPreviewFrame').src = pdfDataUri;
+        document.getElementById('pdfPreviewTitle').textContent = `Daily Receptionist Billing Register`;
+        
+        const saveName = `Receptionist_Register_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.getElementById('pdfSaveBtn').onclick = () => doc.save(saveName);
+        document.getElementById('pdfPrintBtn').onclick = () => {
+            const iframe = document.getElementById('pdfPreviewFrame');
+            if (iframe.contentWindow) iframe.contentWindow.print();
+        };
+
+        showModal('pdfPreviewModal');
+    } catch (err) {
+        showNotification('Error', 'Failed to generate receptionist report: ' + err.message, 'error');
+    }
+}
+
+async function exportAdminReport() {
+    showNotification('Generating...', 'Compiling clinic-wide system audit report.');
+    try {
+        const [users, appointments] = await Promise.all([
+            authFetch(`${API_URL}/users`).catch(() => []),
+            authFetch(`${API_URL}/appointments`).catch(() => [])
+        ]);
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+
+        doc.setFontSize(22);
+        doc.setTextColor(40, 167, 69);
+        doc.text('AyurSutra - Admin System Overview & Audit', 20, y);
+        y += 10;
+
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
         doc.text(`Administrator: ${currentUser.full_name}`, 20, y);
-        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 140, y); y += 15;
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 140, y);
+        y += 15;
 
-        doc.setFontSize(16); doc.text('Clinic Performance Metrics', 20, y);
-        doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
+        doc.setFontSize(14);
+        doc.text('Clinic System Metrics', 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 10;
+        doc.setFontSize(10);
 
         const patientCount = users.filter(u => u.role === 'patient').length;
         const doctorCount = users.filter(u => u.role === 'doctor').length;
         const therapistCount = users.filter(u => u.role === 'therapist').length;
-        const paidAppts = appts.filter(a => a.isPaid);
-        const revenue = paidAppts.reduce((sum, a) => sum + (a.cost || 0), 0);
+        const receptionistCount = users.filter(u => u.role === 'receptionist').length;
 
-        doc.text(`• Registered Patients: ${patientCount}`, 25, y); y += 7;
-        doc.text(`• Active Doctors: ${doctorCount}`, 25, y); y += 7;
-        doc.text(`• Certified Therapists: ${therapistCount}`, 25, y); y += 7;
-        doc.text(`• Total Appointments: ${appts.length}`, 25, y); y += 7;
-        doc.text(`• Revenue Collected: ₹${revenue}`, 25, y); y += 15;
+        doc.text(`• Total Registered Users: ${users.length}`, 25, y); y += 6;
+        doc.text(`• Active Patients: ${patientCount} | Doctors: ${doctorCount} | Therapists: ${therapistCount} | Receptionists: ${receptionistCount}`, 25, y); y += 6;
+        doc.text(`• Total System Appointments: ${appointments.length}`, 25, y); y += 12;
 
-        if (analytics && analytics.patientReported) {
-            doc.setFontSize(16); doc.text('Patient Outcome Metrics', 20, y);
-            doc.line(20, y + 2, 190, y + 2); y += 10; doc.setFontSize(11);
-            doc.text(`• Average Overall Clinic Rating: ${analytics.patientReported.avgOverallRating || '5.0'} / 5.0`, 25, y); y += 7;
-            doc.text(`• Average Doctor Rating: ${analytics.patientReported.avgDoctorRating || '5.0'} / 5.0`, 25, y); y += 7;
-            doc.text(`• Average Therapist Rating: ${analytics.patientReported.avgTherapistRating || '5.0'} / 5.0`, 25, y); y += 15;
-        }
+        const pdfDataUri = doc.output('datauristring');
+        document.getElementById('pdfPreviewFrame').src = pdfDataUri;
+        document.getElementById('pdfPreviewTitle').textContent = `Admin System Overview Audit`;
+        
+        const saveName = `Admin_Audit_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.getElementById('pdfSaveBtn').onclick = () => doc.save(saveName);
+        document.getElementById('pdfPrintBtn').onclick = () => {
+            const iframe = document.getElementById('pdfPreviewFrame');
+            if (iframe.contentWindow) iframe.contentWindow.print();
+        };
 
-        showPdfPreview(doc, 'System Audit & Analytics Report', 'AyurSutra_System_Audit_Report.pdf');
-    } catch (error) {
-        showNotification('Error', error.message, 'error');
+        showModal('pdfPreviewModal');
+    } catch (err) {
+        showNotification('Error', 'Failed to generate admin audit report: ' + err.message, 'error');
     }
-}
+}
