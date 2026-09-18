@@ -2806,6 +2806,15 @@ async function exportAdminReport() {
 // AI WELLNESS ASSISTANT & RECOMMENDATION HANDLERS
 // ==========================================
 
+function formatAIMessage(text) {
+    if (!text) return '';
+    let formatted = escapeHTML(text);
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    formatted = formatted.replace(/^[\-\*]\s+(.*)$/gm, '• $1');
+    return formatted;
+}
+
 async function sendAIChatMessage() {
     const inputEl = document.getElementById('aiChatMessageInput');
     const messagesEl = document.getElementById('aiChatMessages');
@@ -2836,7 +2845,7 @@ async function sendAIChatMessage() {
             body: JSON.stringify({ message: prompt, userRole: currentUser ? currentUser.role : 'patient' })
         });
 
-        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap;">${escapeHTML(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap; line-height: 1.5;">${formatAIMessage(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
     } catch (err) {
         botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: #b91c1c;">Sorry, I encountered an issue. ${escapeHTML(err.message)}</p>`;
     }
@@ -2886,24 +2895,55 @@ async function generateAITreatmentRecommendation() {
         if (rec.isEmergency) {
             html += `<div class="alert alert-error" style="margin-bottom: 16px;">⚠️ <strong>Emergency Symptom Warning:</strong> ${escapeHTML(rec.emergencyWarning || 'Severe symptoms detected. Please seek immediate medical emergency evaluation.')}</div>`;
         } else {
-            html += `<div style="margin-bottom: 16px;"><span class="badge badge-success">Matched Condition: ${escapeHTML(rec.matchedDisease || 'Ayurvedic Clinical Profile')}</span></div>`;
-            html += `<h4 style="margin: 0 0 10px 0; color: var(--color-sage);">Dosha Imbalance: ${escapeHTML(rec.doshaImbalance || 'Vata/Pitta')}</h4>`;
+            if (rec.educationalWording) {
+                html += `<p style="margin: 0 0 16px 0; font-size: 0.9rem; color: var(--color-text-muted); font-style: italic;">${escapeHTML(rec.educationalWording)}</p>`;
+            }
+
+            const recList = rec.recommendations || rec.recommendedTherapies || [];
             
-            if (rec.recommendedTherapies && rec.recommendedTherapies.length > 0) {
-                html += `<h5 style="margin: 14px 0 6px 0; color: var(--color-forest-dark);">Recommended Panchakarma Therapies:</h5><ul style="padding-left: 20px; color: var(--color-text-main);">`;
-                rec.recommendedTherapies.forEach(t => {
-                    html += `<li><strong>${escapeHTML(t.name || t.therapy || t)}</strong>: ${escapeHTML(t.description || t.reason || 'Classical therapy protocol')}</li>`;
+            if (recList.length > 0) {
+                html += `<h4 style="margin: 0 0 14px 0; color: var(--color-sage); font-weight: 700;">Recommended Ayurvedic & Panchakarma Protocols</h4>`;
+                
+                recList.forEach((item, idx) => {
+                    const title = item.therapyName || item.name || item.therapy || `Recommendation #${idx + 1}`;
+                    const category = item.category || 'Panchakarma Protocol';
+                    const objective = item.objective || item.description || '';
+                    const rationale = item.traditionalRationale || item.reason || '';
+                    const duration = item.suggestedDuration || '';
+                    const sessions = item.suggestedSessions || '';
+                    const precautions = item.precautions || [];
+
+                    html += `
+                    <div style="background: rgba(255, 255, 255, 0.85); padding: 18px; border-radius: 14px; margin-bottom: 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                            <h5 style="margin: 0; font-size: 1.05rem; color: var(--color-forest-dark); font-weight: 700;">${escapeHTML(title)}</h5>
+                            <span class="badge badge-success" style="font-size: 0.75rem;">${escapeHTML(category)}</span>
+                        </div>
+                        ${objective ? `<p style="margin: 0 0 8px 0; font-size: 0.9rem; color: var(--color-text-main);"><strong>Objective:</strong> ${escapeHTML(objective)}</p>` : ''}
+                        ${rationale ? `<p style="margin: 0 0 8px 0; font-size: 0.88rem; color: var(--color-text-muted);"><strong>Rationale & Guidance:</strong> ${escapeHTML(rationale)}</p>` : ''}
+                        ${(duration || sessions) ? `
+                            <div style="display: flex; gap: 16px; font-size: 0.82rem; color: var(--color-sage); font-weight: 600; margin-bottom: 8px;">
+                                ${duration ? `<span>⏱️ Duration: ${escapeHTML(duration)}</span>` : ''}
+                                ${sessions ? `<span>📅 Sessions: ${escapeHTML(sessions)}</span>` : ''}
+                            </div>
+                        ` : ''}
+                        ${precautions.length > 0 ? `
+                            <div style="font-size: 0.8rem; color: #b45309; background: #fffbe0; padding: 8px 12px; border-radius: 8px; margin-top: 6px;">
+                                ⚠️ <strong>Precautions:</strong> ${escapeHTML(Array.isArray(precautions) ? precautions.join('; ') : precautions)}
+                            </div>
+                        ` : ''}
+                    </div>`;
                 });
-                html += `</ul>`;
+            } else {
+                html += `<p style="color: var(--color-text-muted);">No specific therapies matched your prompt. Please try describing your symptoms in more detail.</p>`;
             }
 
-            if (rec.herbalFormulations && rec.herbalFormulations.length > 0) {
-                const herbList = Array.isArray(rec.herbalFormulations) ? rec.herbalFormulations.map(f => escapeHTML(typeof f === 'object' ? f.name || f.formulation : f)).join(', ') : escapeHTML(rec.herbalFormulations);
-                html += `<h5 style="margin: 14px 0 6px 0; color: var(--color-forest-dark);">Classical Herbal Formulations:</h5><p style="color: var(--color-text-main);">${herbList}</p>`;
+            if (rec.safetyWarnings && rec.safetyWarnings.length > 0) {
+                html += `<div class="alert alert-warning" style="margin-top: 14px; font-size: 0.85rem;">⚠️ <strong>Safety Notes:</strong> ${escapeHTML(rec.safetyWarnings.join(' '))}</div>`;
             }
 
-            if (rec.safetyDisclaimers) {
-                html += `<div class="alert alert-info" style="margin-top: 16px; font-size: 0.85rem;">⚕️ <strong>Disclaimer:</strong> ${escapeHTML(rec.safetyDisclaimers)}</div>`;
+            if (rec.disclaimer || rec.safetyDisclaimers) {
+                html += `<div class="alert alert-info" style="margin-top: 14px; font-size: 0.82rem;">⚕️ ${escapeHTML(rec.disclaimer || rec.safetyDisclaimers)}</div>`;
             }
         }
         html += `</div>`;
