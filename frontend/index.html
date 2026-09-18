@@ -1320,8 +1320,8 @@
                     </div>
                 </div>
                 <div style="padding: 16px 20px; background: white; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; border-bottom-left-radius: var(--radius-xl); border-bottom-right-radius: var(--radius-xl);">
-                    <input type="text" id="aiChatMessageInput" placeholder="Ask about diet, Panchakarma, or post-therapy care..." style="flex-grow: 1; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 0.92rem;" onkeypress="if(event.key === 'Enter') sendAIChatMessage()">
-                    <button class="btn btn-small" style="margin: 0; width: auto; padding: 12px 20px;" onclick="sendAIChatMessage()">Send</button>
+                    <input type="text" id="aiChatMessageInput" placeholder="Ask about diet, Panchakarma, or post-therapy care..." style="flex-grow: 1; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 0.92rem;" onkeydown="if(event.key === 'Enter' || event.keyCode === 13){ event.preventDefault(); sendAIChatMessage(); }">
+                    <button type="button" class="btn btn-small" id="sendAIChatBtn" style="margin: 0; width: auto; padding: 12px 20px;" onclick="sendAIChatMessage()">Send</button>
                 </div>
             </div>
         </div>

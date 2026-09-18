@@ -2818,10 +2818,20 @@ function formatAIMessage(text) {
 async function sendAIChatMessage() {
     const inputEl = document.getElementById('aiChatMessageInput');
     const messagesEl = document.getElementById('aiChatMessages');
+    const sendBtn = document.getElementById('sendAIChatBtn');
     if (!inputEl || !messagesEl) return;
     const prompt = inputEl.value.trim();
 
     if (!prompt) return;
+
+    // Check if user is logged in
+    const userString = sessionStorage.getItem('ayurUser');
+    if (!userString) {
+        showNotification('Authentication Required', 'Please log in to chat with the AyurSutra AI Assistant.', 'error');
+        closeModal('aiChatModal');
+        showRoleSelection();
+        return;
+    }
 
     // Append user message
     const userMsg = document.createElement('div');
@@ -2830,6 +2840,8 @@ async function sendAIChatMessage() {
     messagesEl.appendChild(userMsg);
 
     inputEl.value = '';
+    inputEl.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
     // Loading indicator
@@ -2847,9 +2859,13 @@ async function sendAIChatMessage() {
 
         botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap; line-height: 1.5;">${formatAIMessage(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
     } catch (err) {
-        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: #b91c1c;">Sorry, I encountered an issue. ${escapeHTML(err.message)}</p>`;
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: #b91c1c;">Sorry, I encountered an issue: ${escapeHTML(err.message)}</p>`;
+    } finally {
+        inputEl.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
+        inputEl.focus();
+        messagesEl.scrollTop = messagesEl.scrollHeight;
     }
-    messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
 function addQuickSymptom(text) {
@@ -2877,14 +2893,31 @@ async function generateAITreatmentRecommendation() {
         return;
     }
 
+    // Check if user is logged in
+    const userString = sessionStorage.getItem('ayurUser');
+    if (!userString) {
+        showNotification('Authentication Required', 'Please log in to generate treatment recommendations.', 'error');
+        closeModal('aiRecommendationModal');
+        showRoleSelection();
+        return;
+    }
+
     if (textEl) textEl.style.display = 'none';
     if (loadingEl) loadingEl.style.display = 'inline-block';
     if (btnEl) btnEl.disabled = true;
 
     try {
-        const result = await authFetch(`${API_URL}/ai/patient-treatment-recommendations`, {
+        let endpoint = `${API_URL}/ai/patient-treatment-recommendations`;
+        let payload = { symptoms: symptomInput };
+
+        if (currentUser && currentUser.role !== 'patient') {
+            endpoint = `${API_URL}/ai/treatment-recommendations/generate`;
+            payload = { patientId: currentUser._id, presentingSymptoms: symptomInput };
+        }
+
+        const result = await authFetch(endpoint, {
             method: 'POST',
-            body: JSON.stringify({ symptoms: symptomInput })
+            body: JSON.stringify(payload)
         });
 
         const rec = result.data || result;
