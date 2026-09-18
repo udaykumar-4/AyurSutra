@@ -323,6 +323,7 @@ function showDashboard(role) {
         populateDoctorDropdown();
         loadPatientPayments();
         loadFeedbackForm();
+        loadPatientOutcomeAnalytics();
     }
 }
 
@@ -2799,4 +2800,166 @@ async function exportAdminReport() {
     } catch (err) {
         showNotification('Error', 'Failed to generate admin audit report: ' + err.message, 'error');
     }
+}
+
+// ==========================================
+// AI WELLNESS ASSISTANT & RECOMMENDATION HANDLERS
+// ==========================================
+
+async function sendAIChatMessage() {
+    const inputEl = document.getElementById('aiChatMessageInput');
+    const messagesEl = document.getElementById('aiChatMessages');
+    if (!inputEl || !messagesEl) return;
+    const prompt = inputEl.value.trim();
+
+    if (!prompt) return;
+
+    // Append user message
+    const userMsg = document.createElement('div');
+    userMsg.style.cssText = 'align-self: flex-end; background: var(--color-sage); color: white; padding: 12px 18px; border-radius: 16px; max-width: 85%; box-shadow: var(--shadow-sm);';
+    userMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem;">${escapeHTML(prompt)}</p>`;
+    messagesEl.appendChild(userMsg);
+
+    inputEl.value = '';
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    // Loading indicator
+    const botMsg = document.createElement('div');
+    botMsg.style.cssText = 'align-self: flex-start; background: white; padding: 14px 18px; border-radius: 16px; max-width: 85%; box-shadow: var(--shadow-sm); border: 1px solid var(--color-glass-border);';
+    botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-muted);">Thinking...</p>`;
+    messagesEl.appendChild(botMsg);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    try {
+        const data = await authFetch(`${API_URL}/ai/chat/message`, {
+            method: 'POST',
+            body: JSON.stringify({ message: prompt, userRole: currentUser ? currentUser.role : 'patient' })
+        });
+
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap;">${escapeHTML(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
+    } catch (err) {
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: #b91c1c;">Sorry, I encountered an issue. ${escapeHTML(err.message)}</p>`;
+    }
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addQuickSymptom(text) {
+    const input = document.getElementById('aiSymptomInput');
+    if (!input) return;
+    if (input.value.trim().length > 0) {
+        input.value += ', ' + text;
+    } else {
+        input.value = text;
+    }
+}
+
+async function generateAITreatmentRecommendation() {
+    const symptomInputEl = document.getElementById('aiSymptomInput');
+    const outputEl = document.getElementById('aiRecommendationOutput');
+    const textEl = document.getElementById('generateRecText');
+    const loadingEl = document.getElementById('generateRecLoading');
+    const btnEl = document.getElementById('generateRecBtn');
+
+    if (!symptomInputEl) return;
+    const symptomInput = symptomInputEl.value.trim();
+
+    if (!symptomInput) {
+        showNotification('Input Required', 'Please describe your symptoms or health concerns.', 'error');
+        return;
+    }
+
+    if (textEl) textEl.style.display = 'none';
+    if (loadingEl) loadingEl.style.display = 'inline-block';
+    if (btnEl) btnEl.disabled = true;
+
+    try {
+        const result = await authFetch(`${API_URL}/ai/patient-treatment-recommendations`, {
+            method: 'POST',
+            body: JSON.stringify({ symptoms: symptomInput })
+        });
+
+        const rec = result.data || result;
+        outputEl.style.display = 'block';
+
+        let html = `<div style="background: var(--color-sand-bg); padding: 24px; border-radius: 18px; border: 1.5px solid var(--color-glass-border);">`;
+        
+        if (rec.isEmergency) {
+            html += `<div class="alert alert-error" style="margin-bottom: 16px;">⚠️ <strong>Emergency Symptom Warning:</strong> ${escapeHTML(rec.emergencyWarning || 'Severe symptoms detected. Please seek immediate medical emergency evaluation.')}</div>`;
+        } else {
+            html += `<div style="margin-bottom: 16px;"><span class="badge badge-success">Matched Condition: ${escapeHTML(rec.matchedDisease || 'Ayurvedic Clinical Profile')}</span></div>`;
+            html += `<h4 style="margin: 0 0 10px 0; color: var(--color-sage);">Dosha Imbalance: ${escapeHTML(rec.doshaImbalance || 'Vata/Pitta')}</h4>`;
+            
+            if (rec.recommendedTherapies && rec.recommendedTherapies.length > 0) {
+                html += `<h5 style="margin: 14px 0 6px 0; color: var(--color-forest-dark);">Recommended Panchakarma Therapies:</h5><ul style="padding-left: 20px; color: var(--color-text-main);">`;
+                rec.recommendedTherapies.forEach(t => {
+                    html += `<li><strong>${escapeHTML(t.name || t.therapy || t)}</strong>: ${escapeHTML(t.description || t.reason || 'Classical therapy protocol')}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            if (rec.herbalFormulations && rec.herbalFormulations.length > 0) {
+                const herbList = Array.isArray(rec.herbalFormulations) ? rec.herbalFormulations.map(f => escapeHTML(typeof f === 'object' ? f.name || f.formulation : f)).join(', ') : escapeHTML(rec.herbalFormulations);
+                html += `<h5 style="margin: 14px 0 6px 0; color: var(--color-forest-dark);">Classical Herbal Formulations:</h5><p style="color: var(--color-text-main);">${herbList}</p>`;
+            }
+
+            if (rec.safetyDisclaimers) {
+                html += `<div class="alert alert-info" style="margin-top: 16px; font-size: 0.85rem;">⚕️ <strong>Disclaimer:</strong> ${escapeHTML(rec.safetyDisclaimers)}</div>`;
+            }
+        }
+        html += `</div>`;
+        outputEl.innerHTML = html;
+
+    } catch (err) {
+        showNotification('Error', 'Failed to generate treatment recommendation: ' + err.message, 'error');
+    } finally {
+        if (textEl) textEl.style.display = 'inline';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (btnEl) btnEl.disabled = false;
+    }
+}
+
+async function loadPatientOutcomeAnalytics() {
+    const container = document.getElementById('patientOutcomeAnalyticsBody');
+    if (!container) return;
+
+    try {
+        const data = await authFetch(`${API_URL}/analytics/outcomes/patient`);
+        const { adherence, patientReported } = data || {};
+
+        let html = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">`;
+        
+        if (adherence) {
+            html += `
+            <div style="background: white; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+                <p style="margin: 0; font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600;">Adherence Rate</p>
+                <h3 style="margin: 4px 0; font-size: 1.6rem; color: var(--color-sage); font-weight: 800;">${adherence.adherenceRate || 0}%</h3>
+                <div class="progress-bar" style="height: 8px; margin: 8px 0 0 0;"><div class="progress-fill" style="width: ${adherence.adherenceRate || 0}%;"></div></div>
+            </div>`;
+        }
+
+        if (patientReported) {
+            html += `
+            <div style="background: white; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+                <p style="margin: 0; font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600;">Overall Satisfaction</p>
+                <h3 style="margin: 4px 0; font-size: 1.6rem; color: #f59e0b; font-weight: 800;">${patientReported.avgOverallRating || 5.0} ★</h3>
+                <p style="margin: 0; font-size: 0.78rem; color: var(--color-text-muted);">Patient Feedback Score</p>
+            </div>`;
+        }
+
+        html += `
+        <div style="background: white; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+            <p style="margin: 0; font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600;">Recovery Status</p>
+            <h3 style="margin: 4px 0; font-size: 1.4rem; color: var(--color-emerald-dark); font-weight: 800;">Active Care</h3>
+            <p style="margin: 0; font-size: 0.78rem; color: var(--color-text-muted);">Panchakarma Protocol On Track</p>
+        </div></div>`;
+
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 0.85rem;">Panchakarma recovery tracking active. Schedule your next session to view updated metrics.</p>`;
+    }
+}
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
