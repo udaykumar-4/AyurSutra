@@ -9,7 +9,7 @@ export const CURRENT_ENV: Environment =
 
 // Dynamically extract computer's local Wi-Fi IP address for mobile devices
 const debuggerHost = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
-const devHostIp = debuggerHost ? debuggerHost.split(':')[0] : '192.168.31.251';
+const devHostIp = debuggerHost ? debuggerHost.split(':')[0] : '192.168.31.232';
 
 // Web browser uses localhost:5000, physical mobile phone uses computer Wi-Fi IP
 const defaultDevUrl =

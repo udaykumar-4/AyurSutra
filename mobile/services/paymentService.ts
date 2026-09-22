@@ -24,7 +24,7 @@ export const paymentService = {
     return {
       appointmentId: appointment._id,
       treatment: appointment.treatment,
-      cost: appointment.cost || 1500,
+      cost: appointment.cost || (appointment.treatment === 'Consultation' ? 500 : 1500),
       currency: 'INR',
       isPaid: !!appointment.isPaid,
       paymentStatus: appointment.isPaid ? ('PAID' as const) : ('UNPAID' as const),

@@ -43,6 +43,18 @@ const DEFAULT_MOBILE_SLOTS: SlotAvailability[] = [
   { time: '05:00 PM', start: '05:00 PM', status: 'available' },
 ];
 
+export const TREATMENT_FEES: Record<string, number> = {
+  'Consultation': 500,
+  'Abhyanga': 2000,
+  'Shirodhara': 2500,
+  'Swedana': 1500,
+  'Pizhichil': 3000,
+};
+
+export const getTreatmentFee = (treatmentName: string): number => {
+  return TREATMENT_FEES[treatmentName] || 1500;
+};
+
 export default function BookAppointmentModal({
   visible,
   onClose,
@@ -407,6 +419,12 @@ export default function BookAppointmentModal({
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Treatment:</Text>
                   <Text style={styles.summaryValue}>{treatment || 'Consultation'}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Fee / Estimated Cost:</Text>
+                  <Text style={[styles.summaryValue, { color: Colors.primary, fontWeight: '700' }]}>
+                    ₹{getTreatmentFee(treatment || 'Consultation')}
+                  </Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Date & Particular Time:</Text>

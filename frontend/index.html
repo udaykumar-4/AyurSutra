@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AyurSutra - Panchakarma Management System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -21,57 +18,54 @@
         </div>
 
         <div class="login-container" id="roleSelection">
-            <div style="text-align: center; margin-bottom: 32px;">
-                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--color-forest-deep); letter-spacing: -0.3px; margin-bottom: 6px;">Select Portal Role</h2>
-                <p style="font-size: 0.875rem; color: var(--color-text-muted);">Choose your workspace role to access specialized clinical features</p>
-            </div>
+            <h2 style="text-align: center; margin-bottom: 40px; color: #333; font-size: 2rem;">Select Your Role</h2>
             <div class="role-selection">
                 <button class="role-card admin" onclick="showLogin('admin')">
-                    <h3><i class="fas fa-user-shield" style="color: #7c3aed;"></i> Administrator</h3>
+                    <h3>👩‍💼 Administrator</h3>
                     <p>Manage users, schedules, analytics, and system settings with comprehensive oversight</p>
                 </button>
                 <button class="role-card doctor" onclick="showLogin('doctor')">
-                    <h3><i class="fas fa-user-md" style="color: #059669;"></i> Doctor</h3>
+                    <h3>👨‍⚕️ Doctor</h3>
                     <p>Patient records, prescriptions, treatment plans, and medical consultations</p>
                 </button>
                 <button class="role-card therapist" onclick="showLogin('therapist')">
-                    <h3><i class="fas fa-spa" style="color: #0284c7;"></i> Therapist</h3>
+                    <h3>🧘 Therapist</h3>
                     <p>Therapy sessions, treatment execution, and patient progress tracking</p>
                 </button>
                 <button class="role-card receptionist" onclick="showLogin('receptionist')">
-                    <h3><i class="fas fa-concierge-bell" style="color: #d97706;"></i> Receptionist</h3>
+                    <h3>🛎️ Receptionist</h3>
                     <p>Patient check-in, walk-in registration, appointment scheduling, and bill settlement</p>
                 </button>
                 <button class="role-card patient" onclick="showLogin('patient')">
-                    <h3><i class="fas fa-heartbeat" style="color: #10b981;"></i> Patient</h3>
+                    <h3>🧑 Patient</h3>
                     <p>Appointments, treatment progress, health records, and wellness tracking</p>
                 </button>
             </div>
         </div>
 
         <div class="login-container" id="loginScreen">
-            <button class="back-btn" onclick="showRoleSelection()"><i class="fas fa-arrow-left"></i> Back to Roles</button>
+            <button class="back-btn" onclick="showRoleSelection()">← Back</button>
             <div class="login-form">
-                <h2 style="text-align: center; margin-bottom: 24px; color: var(--color-forest-deep); font-weight: 700; font-size: 1.6rem; letter-spacing: -0.3px;" id="loginTitle">Login</h2>
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;" id="loginTitle">Login</h2>
                 <div id="loginAlert"></div>
                 <form onsubmit="handleLogin(event)">
                     <div class="form-group">
-                        <label for="username">Email Address</label>
-                        <input type="email" id="username" required autocomplete="email" placeholder="name@ayursutra.com">
+                        <label for="username">Email</label>
+                        <input type="email" id="username" required autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+                        <input type="password" id="password" required autocomplete="current-password">
                     </div>
                     <button type="submit" class="btn" id="loginBtn">
-                        <span id="loginText">Sign In</span>
+                        <span id="loginText">Login</span>
                         <div class="loading" id="loginLoading" style="display: none;"></div>
                     </button>
                 </form>
 
-                <div style="text-align: center; margin-top: 24px;">
-                    <p style="color: var(--color-text-muted); font-size: 0.875rem;">Don't have an account? 
-                        <span style="color: var(--color-forest-medium); font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="triggerRegistration(event)">
+                <div style="text-align: center; margin-top: 25px;">
+                    <p style="color: var(--color-text-muted);">Don't have an account? 
+                        <span style="color: var(--color-sage); font-weight: 700; cursor: pointer;" onclick="triggerRegistration(event)">
                             Register here
                         </span>
                     </p>
@@ -117,6 +111,7 @@
             <div class="nav-tabs">
                 <button class="nav-tab active" onclick="showTab(event, 'receptionistAppointments')">Appointments & Booking</button>
                 <button class="nav-tab" onclick="showTab(event, 'receptionistRegister')">Register Walk-in Patient</button>
+                <button class="nav-tab" onclick="showTab(event, 'receptionistPayments')">Billing & Payments Register</button>
             </div>
 
             <!-- Tab 1: Appointments -->
@@ -160,6 +155,41 @@
                     </div>
                     <button type="submit" class="btn">Register Patient</button>
                 </form>
+            </div>
+
+            <!-- Tab 3: Billing & Payments Register (Full parity with mobile app) -->
+            <div class="tab-content" id="receptionistPayments">
+                <h3>Billing & Payments Register</h3>
+                <div class="stats-grid" style="margin: 20px 0;">
+                    <div class="stat-card">
+                        <h3 id="receptionistPaidRevenue">₹0</h3>
+                        <p>Total Revenue Collected</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="receptionistPendingRevenue">₹0</h3>
+                        <p>Pending Receivables</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="receptionistTotalInvoices">0</h3>
+                        <p>Total Invoices</p>
+                    </div>
+                </div>
+                <div class="table-responsive-container">
+                    <table class="table" id="receptionistBillingTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                <th>Treatment</th>
+                                <th>Staff</th>
+                                <th>Fee</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receptionistBillingBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -677,45 +707,39 @@
             </div>
 
             <!-- AI Assistants & Recommendations Banner Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin: 24px 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 24px 0;">
                 <!-- Banner 1: AI Chatbot Assistant -->
-                <div style="background: linear-gradient(135deg, var(--color-forest-deep) 0%, var(--color-forest) 100%); color: #ffffff; padding: 22px 24px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: var(--shadow-sm); border: 1px solid rgba(255, 255, 255, 0.15); transition: all var(--transition-normal);" onclick="showModal('aiChatModal')">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #a7f3d0;">
-                            <i class="fas fa-robot"></i>
-                        </div>
+                <div style="background: linear-gradient(135deg, rgba(30, 63, 32, 0.95) 0%, rgba(45, 90, 39, 0.95) 100%); color: white; padding: 20px 24px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: var(--shadow-sm); border: 1px solid rgba(255, 255, 255, 0.2);" onclick="showModal('aiChatModal')">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="font-size: 2rem;">🤖</div>
                         <div>
-                            <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: #ffffff;">AyurSutra AI Assistant</h4>
-                            <p style="margin: 3px 0 0 0; font-size: 0.8125rem; color: #d1fae5; opacity: 0.9;">Diet, wellness & Panchakarma care advice</p>
+                            <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700;">Ask AyurSutra AI Assistant</h4>
+                            <p style="margin: 2px 0 0 0; font-size: 0.85rem; opacity: 0.9;">Diet, wellness & Panchakarma care advice</p>
                         </div>
                     </div>
-                    <span style="font-weight: 600; background: rgba(255, 255, 255, 0.18); color: #ffffff; padding: 6px 14px; border-radius: var(--radius-full); font-size: 0.8125rem; white-space: nowrap;">Ask <i class="fas fa-arrow-right" style="font-size: 0.75em; margin-left: 4px;"></i></span>
+                    <span style="font-weight: 700; background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem;">Ask →</span>
                 </div>
 
                 <!-- Banner 2: AI Treatment Recommendation Engine -->
-                <div style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border: 1.5px solid var(--color-emerald-border); color: var(--color-forest-deep); padding: 22px 24px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: var(--shadow-xs); transition: all var(--transition-normal);" onclick="showModal('aiRecommendationModal')">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--color-emerald-dark);">
-                            <i class="fas fa-leaf"></i>
-                        </div>
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%); border: 1.5px solid rgba(16, 185, 129, 0.3); color: var(--color-forest-dark); padding: 20px 24px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: var(--shadow-sm);" onclick="showModal('aiRecommendationModal')">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="font-size: 2rem;">🌿</div>
                         <div>
-                            <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: var(--color-forest-deep);">AI Treatment Recommendations</h4>
-                            <p style="margin: 3px 0 0 0; font-size: 0.8125rem; color: var(--color-forest-medium);">Personalized Ayurvedic therapy guidance</p>
+                            <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--color-sage);">AI Treatment Recommendations</h4>
+                            <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: var(--color-forest);">Personalized Ayurvedic therapy guidance</p>
                         </div>
                     </div>
-                    <span style="font-weight: 600; background: var(--color-forest-medium); color: #ffffff; padding: 6px 14px; border-radius: var(--radius-full); font-size: 0.8125rem; white-space: nowrap;">Explore <i class="fas fa-arrow-right" style="font-size: 0.75em; margin-left: 4px;"></i></span>
+                    <span style="font-weight: 700; background: var(--color-sage); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem;">Explore →</span>
                 </div>
             </div>
 
             <!-- Personal Outcome Analytics Card -->
-            <div id="patientOutcomeAnalyticsCard" style="background: #ffffff; border-radius: var(--radius-lg); padding: 24px; margin-bottom: 28px; border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-xs);">
-                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
-                    <div style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--color-sage-subtle); display: flex; align-items: center; justify-content: center; color: var(--color-forest-medium); font-size: 1.1rem;">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
+            <div id="patientOutcomeAnalyticsCard" style="background: rgba(255, 255, 255, 0.9); border-radius: 18px; padding: 24px; margin-bottom: 28px; border: 1px solid var(--color-glass-border); box-shadow: var(--shadow-sm);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <span style="font-size: 1.5rem;">📊</span>
                     <div>
-                        <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--color-text-main);">Personal Recovery & Outcome Analytics</h4>
-                        <p style="margin: 2px 0 0 0; font-size: 0.8125rem; color: var(--color-text-muted);">Panchakarma session completion & adherence progress</p>
+                        <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--color-forest-dark);">Personal Recovery & Outcome Analytics</h4>
+                        <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: var(--color-text-muted);">Panchakarma session completion & adherence progress</p>
                     </div>
                 </div>
                 <div id="patientOutcomeAnalyticsBody">
@@ -975,12 +999,13 @@
                             <label>Treatment Type</label>
                             <select id="treatmentType" required onchange="toggleAppointmentFields()">
                                 <option value="">Select Treatment</option>
-                                <option value="Abhyanga">Abhyanga (Full Body Massage)</option>
-                                <option value="Shirodhara">Shirodhara (Oil Pouring)</option>
-                                <option value="Swedana">Swedana (Steam Therapy)</option>
-                                <option value="Pizhichil">Pizhichil (Oil Bath)</option>
-                                <option value="Consultation">Doctor Consultation</option>
+                                <option value="Consultation" selected>Doctor Consultation (₹500)</option>
+                                <option value="Abhyanga">Abhyanga — Full Body Massage (₹2,000)</option>
+                                <option value="Shirodhara">Shirodhara — Oil Pouring (₹2,500)</option>
+                                <option value="Swedana">Swedana — Steam Therapy (₹1,500)</option>
+                                <option value="Pizhichil">Pizhichil — Oil Bath (₹3,000)</option>
                             </select>
+                            <div id="treatmentFeeDisplay" style="margin-top: 6px; font-weight: 700; color: var(--color-sage); font-size: 0.9rem;">Estimated Fee: ₹500</div>
                         </div>
                         <div class="form-group">
                             <label>📅 Preferred Date (Click to open Calendar)</label>

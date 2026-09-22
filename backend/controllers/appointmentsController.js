@@ -432,7 +432,7 @@ const markAppointmentAsPaid = async (req, res) => {
     const appointment = await Appointment.findById(req.params.id);
 
     if (appointment) {
-      appointment.isPaid = true;
+      appointment.isPaid = typeof req.body.isPaid === 'boolean' ? req.body.isPaid : true;
       const updatedAppointment = await appointment.save();
       res.json(updatedAppointment);
     } else {

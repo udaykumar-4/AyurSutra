@@ -324,6 +324,13 @@ function showDashboard(role) {
         loadPatientPayments();
         loadFeedbackForm();
         loadPatientOutcomeAnalytics();
+    } else if (role === 'receptionist') {
+        document.getElementById('receptionistName').textContent = currentUser.full_name;
+        document.getElementById('receptionistAvatar').textContent = currentUser.full_name.charAt(0).toUpperCase();
+        
+        loadReceptionistSchedule();
+        loadReceptionistPayments();
+        updateReceptionistStats();
     }
 }
 
@@ -1736,6 +1743,20 @@ function toggleAppointmentFields() {
     const treatmentType = document.getElementById('treatmentType').value;
     const therapistGroup = document.getElementById('therapist-select-group');
     const doctorGroup = document.getElementById('doctor-select-group');
+    const feeDisplay = document.getElementById('treatmentFeeDisplay');
+
+    const treatmentCosts = {
+        'Consultation': 500,
+        'Abhyanga': 2000,
+        'Shirodhara': 2500,
+        'Swedana': 1500,
+        'Pizhichil': 3000
+    };
+
+    if (feeDisplay) {
+        const fee = treatmentCosts[treatmentType] || 500;
+        feeDisplay.textContent = `Estimated Fee: ₹${fee.toLocaleString('en-IN')}`;
+    }
 
     if (!therapistGroup || !doctorGroup) return;
 
@@ -2747,6 +2768,206 @@ async function exportReceptionistReport() {
     }
 }
 
+// --- Receptionist Operations ---
+
+async function loadReceptionistSchedule() {
+    const tbody = document.getElementById('receptionistScheduleBody');
+    if (!tbody) return;
+
+    try {
+        const appointments = await authFetch(`${API_URL}/appointments`);
+
+        if (!appointments || appointments.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">No appointments found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = appointments.map(a => {
+            const patient = a.patientId ? escapeHTML(a.patientId.full_name) : 'Walk-in / Unknown';
+            const staff = a.doctorId ? escapeHTML(a.doctorId.full_name) : (a.therapistId ? escapeHTML(a.therapistId.full_name) : 'Unassigned');
+            const statusBadge = `<span class="badge badge-${getStatusBadge(a.status)}">${a.status}</span>`;
+            const paymentBadge = a.isPaid
+                ? `<span class="badge badge-success">Paid</span>`
+                : `<span class="badge badge-warning">Unpaid</span>`;
+            
+            const payAction = a.isPaid
+                ? `<button class="btn btn-small" style="background: #6c757d; padding: 4px 8px; font-size: 0.75rem;" onclick="markAsUnpaidByReceptionist('${a._id}')">Mark Unpaid</button>`
+                : `<button class="btn btn-small" style="background: #10b981; padding: 4px 8px; font-size: 0.75rem;" onclick="markAsPaidByReceptionist('${a._id}')">Mark Paid</button>`;
+
+            return `
+                <tr>
+                    <td>${formatDate(a.appointment_date)}</td>
+                    <td>${formatTime(a.appointment_time)}</td>
+                    <td><strong>${patient}</strong></td>
+                    <td>${staff}</td>
+                    <td>${escapeHTML(a.treatment || 'Consultation')}</td>
+                    <td>${statusBadge}</td>
+                    <td>${paymentBadge}</td>
+                    <td>${payAction}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Error loading appointments: ${escapeHTML(error.message)}</td></tr>`;
+    }
+}
+
+async function loadReceptionistPayments() {
+    const tbody = document.getElementById('receptionistBillingBody');
+    if (!tbody) return;
+
+    try {
+        const appointments = await authFetch(`${API_URL}/appointments`);
+
+        const paid = (appointments || []).filter(a => a.isPaid);
+        const unpaid = (appointments || []).filter(a => !a.isPaid && a.status !== 'cancelled');
+
+        const paidRev = paid.reduce((acc, a) => acc + (a.cost || 500), 0);
+        const pendingRev = unpaid.reduce((acc, a) => acc + (a.cost || 500), 0);
+        const validInvoices = (appointments || []).filter(a => a.status !== 'cancelled' || a.isPaid);
+
+        const paidEl = document.getElementById('receptionistPaidRevenue');
+        const pendingEl = document.getElementById('receptionistPendingRevenue');
+        const countEl = document.getElementById('receptionistTotalInvoices');
+
+        if (paidEl) paidEl.textContent = `₹${paidRev.toLocaleString('en-IN')}`;
+        if (pendingEl) pendingEl.textContent = `₹${pendingRev.toLocaleString('en-IN')}`;
+        if (countEl) countEl.textContent = validInvoices.length;
+
+        if (!appointments || appointments.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px;">No billing records found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = appointments.map(a => {
+            const patient = a.patientId ? escapeHTML(a.patientId.full_name) : 'Unknown';
+            const staff = a.doctorId ? escapeHTML(a.doctorId.full_name) : (a.therapistId ? escapeHTML(a.therapistId.full_name) : 'N/A');
+            const cost = a.cost || 500;
+            const statusBadge = a.isPaid
+                ? `<span class="badge badge-success">Paid</span>`
+                : `<span class="badge badge-warning">Unpaid</span>`;
+            
+            const actionBtn = a.isPaid
+                ? `<button class="btn btn-small" style="background: #6c757d; padding: 4px 8px; font-size: 0.75rem;" onclick="markAsUnpaidByReceptionist('${a._id}')">Mark Unpaid</button>`
+                : `<button class="btn btn-small" style="background: #10b981; padding: 4px 8px; font-size: 0.75rem;" onclick="markAsPaidByReceptionist('${a._id}')">Mark Paid</button>`;
+
+            return `
+                <tr>
+                    <td>${formatDate(a.appointment_date)}</td>
+                    <td><strong>${patient}</strong></td>
+                    <td>${escapeHTML(a.treatment || 'Consultation')}</td>
+                    <td>${staff}</td>
+                    <td><strong>₹${cost.toLocaleString('en-IN')}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Error loading billing records: ${escapeHTML(error.message)}</td></tr>`;
+    }
+}
+
+async function markAsPaidByReceptionist(id) {
+    try {
+        await authFetch(`${API_URL}/appointments/${id}/pay`, {
+            method: 'PUT',
+            body: JSON.stringify({ isPaid: true })
+        });
+        showNotification('Payment Recorded', 'Appointment marked as PAID.', 'success');
+        loadReceptionistSchedule();
+        loadReceptionistPayments();
+        updateReceptionistStats();
+    } catch (err) {
+        showNotification('Payment Error', err.message || 'Failed to update payment status.', 'error');
+    }
+}
+
+async function markAsUnpaidByReceptionist(id) {
+    try {
+        await authFetch(`${API_URL}/appointments/${id}/pay`, {
+            method: 'PUT',
+            body: JSON.stringify({ isPaid: false })
+        });
+        showNotification('Payment Updated', 'Appointment marked as UNPAID.', 'info');
+        loadReceptionistSchedule();
+        loadReceptionistPayments();
+        updateReceptionistStats();
+    } catch (err) {
+        showNotification('Payment Error', err.message || 'Failed to update payment status.', 'error');
+    }
+}
+
+async function updateReceptionistStats() {
+    try {
+        const appointments = await authFetch(`${API_URL}/appointments`).catch(() => []);
+        const patients = await authFetch(`${API_URL}/users?role=patient`).catch(() => []);
+
+        const today = getTodayDateStr();
+        const todayAppts = (appointments || []).filter(a => 
+            getLocalDateStr(a.appointment_date) === today && a.status !== 'cancelled'
+        );
+        const pendingPayments = (appointments || []).filter(a => !a.isPaid && a.status !== 'cancelled');
+
+        const todayEl = document.getElementById('receptionistTodayAppts');
+        const pendingEl = document.getElementById('receptionistPendingPayments');
+        const patientsEl = document.getElementById('receptionistTotalPatients');
+
+        if (todayEl) todayEl.textContent = todayAppts.length;
+        if (pendingEl) pendingEl.textContent = pendingPayments.length;
+        if (patientsEl) patientsEl.textContent = Array.isArray(patients) ? patients.length : 0;
+    } catch (error) {
+        console.error("Error updating receptionist stats:", error);
+    }
+}
+
+async function registerWalkInPatient(event) {
+    if (event) event.preventDefault();
+    const nameInput = document.getElementById('walkInName');
+    const emailInput = document.getElementById('walkInEmail');
+    const passInput = document.getElementById('walkInPassword');
+
+    if (!nameInput || !emailInput || !passInput) return;
+
+    const full_name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passInput.value;
+
+    if (!full_name || !email || !password) {
+        showNotification('Validation Error', 'Please fill out all fields.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                full_name,
+                email,
+                password,
+                role: 'patient'
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Registration failed.');
+        }
+
+        showNotification('Registration Successful', `Patient ${full_name} registered successfully!`, 'success');
+        nameInput.value = '';
+        emailInput.value = '';
+        passInput.value = 'patient123';
+
+        updateReceptionistStats();
+        const scheduleTabBtn = document.querySelector('.nav-tab[onclick*="receptionistAppointments"]');
+        if (scheduleTabBtn) scheduleTabBtn.click();
+    } catch (err) {
+        showNotification('Registration Failed', err.message || 'Could not register patient.', 'error');
+    }
+}
+
 async function exportAdminReport() {
     showNotification('Generating...', 'Compiling clinic-wide system audit report.');
     try {
@@ -2835,7 +3056,7 @@ async function sendAIChatMessage() {
 
     // Append user message
     const userMsg = document.createElement('div');
-    userMsg.style.cssText = 'align-self: flex-end; background: linear-gradient(135deg, var(--color-forest) 0%, var(--color-forest-medium) 100%); color: white; padding: 12px 18px; border-radius: 14px; max-width: 85%; box-shadow: var(--shadow-xs);';
+    userMsg.style.cssText = 'align-self: flex-end; background: var(--color-sage); color: white; padding: 12px 18px; border-radius: 16px; max-width: 85%; box-shadow: var(--shadow-sm);';
     userMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem;">${escapeHTML(prompt)}</p>`;
     messagesEl.appendChild(userMsg);
 
@@ -2846,8 +3067,8 @@ async function sendAIChatMessage() {
 
     // Loading indicator
     const botMsg = document.createElement('div');
-    botMsg.style.cssText = 'align-self: flex-start; background: #ffffff; padding: 14px 18px; border-radius: 14px; max-width: 85%; box-shadow: var(--shadow-xs); border: 1px solid var(--color-border-subtle);';
-    botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-muted);"><i class="fas fa-spinner fa-spin" style="margin-right: 6px;"></i> Analyzing Ayurvedic clinical knowledge...</p>`;
+    botMsg.style.cssText = 'align-self: flex-start; background: white; padding: 14px 18px; border-radius: 16px; max-width: 85%; box-shadow: var(--shadow-sm); border: 1px solid var(--color-glass-border);';
+    botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-muted);">Thinking...</p>`;
     messagesEl.appendChild(botMsg);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
@@ -2857,9 +3078,9 @@ async function sendAIChatMessage() {
             body: JSON.stringify({ message: prompt, userRole: currentUser ? currentUser.role : 'patient' })
         });
 
-        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap; line-height: 1.55;">${formatAIMessage(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap; line-height: 1.5;">${formatAIMessage(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
     } catch (err) {
-        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-error);"><i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i> ${escapeHTML(err.message)}</p>`;
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: #b91c1c;">Sorry, I encountered an issue: ${escapeHTML(err.message)}</p>`;
     } finally {
         inputEl.disabled = false;
         if (sendBtn) sendBtn.disabled = false;
@@ -2923,19 +3144,19 @@ async function generateAITreatmentRecommendation() {
         const rec = result.data || result;
         outputEl.style.display = 'block';
 
-        let html = `<div style="background: var(--color-surface-subtle); padding: 22px; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-xs);">`;
+        let html = `<div style="background: var(--color-sand-bg); padding: 24px; border-radius: 18px; border: 1.5px solid var(--color-glass-border);">`;
         
         if (rec.isEmergency) {
             html += `<div class="alert alert-error" style="margin-bottom: 16px;">⚠️ <strong>Emergency Symptom Warning:</strong> ${escapeHTML(rec.emergencyWarning || 'Severe symptoms detected. Please seek immediate medical emergency evaluation.')}</div>`;
         } else {
             if (rec.educationalWording) {
-                html += `<p style="margin: 0 0 16px 0; font-size: 0.875rem; color: var(--color-text-muted); font-style: italic;">${escapeHTML(rec.educationalWording)}</p>`;
+                html += `<p style="margin: 0 0 16px 0; font-size: 0.9rem; color: var(--color-text-muted); font-style: italic;">${escapeHTML(rec.educationalWording)}</p>`;
             }
 
             const recList = rec.recommendations || rec.recommendedTherapies || [];
             
             if (recList.length > 0) {
-                html += `<h4 style="margin: 0 0 14px 0; color: var(--color-forest-medium); font-weight: 700; font-size: 1.05rem;">Recommended Ayurvedic & Panchakarma Protocols</h4>`;
+                html += `<h4 style="margin: 0 0 14px 0; color: var(--color-sage); font-weight: 700;">Recommended Ayurvedic & Panchakarma Protocols</h4>`;
                 
                 recList.forEach((item, idx) => {
                     const title = item.therapyName || item.name || item.therapy || `Recommendation #${idx + 1}`;
@@ -2947,21 +3168,21 @@ async function generateAITreatmentRecommendation() {
                     const precautions = item.precautions || [];
 
                     html += `
-                    <div style="background: #ffffff; padding: 18px 20px; border-radius: var(--radius-md); margin-bottom: 14px; border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-xs);">
+                    <div style="background: rgba(255, 255, 255, 0.85); padding: 18px; border-radius: 14px; margin-bottom: 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
-                            <h5 style="margin: 0; font-size: 1rem; color: var(--color-forest-deep); font-weight: 700;">${escapeHTML(title)}</h5>
-                            <span class="badge badge-success" style="font-size: 0.72rem;">${escapeHTML(category)}</span>
+                            <h5 style="margin: 0; font-size: 1.05rem; color: var(--color-forest-dark); font-weight: 700;">${escapeHTML(title)}</h5>
+                            <span class="badge badge-success" style="font-size: 0.75rem;">${escapeHTML(category)}</span>
                         </div>
-                        ${objective ? `<p style="margin: 0 0 8px 0; font-size: 0.875rem; color: var(--color-text-main);"><strong>Objective:</strong> ${escapeHTML(objective)}</p>` : ''}
-                        ${rationale ? `<p style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--color-text-secondary);"><strong>Rationale & Guidance:</strong> ${escapeHTML(rationale)}</p>` : ''}
+                        ${objective ? `<p style="margin: 0 0 8px 0; font-size: 0.9rem; color: var(--color-text-main);"><strong>Objective:</strong> ${escapeHTML(objective)}</p>` : ''}
+                        ${rationale ? `<p style="margin: 0 0 8px 0; font-size: 0.88rem; color: var(--color-text-muted);"><strong>Rationale & Guidance:</strong> ${escapeHTML(rationale)}</p>` : ''}
                         ${(duration || sessions) ? `
-                            <div style="display: flex; gap: 16px; font-size: 0.8125rem; color: var(--color-forest-medium); font-weight: 600; margin-bottom: 8px;">
+                            <div style="display: flex; gap: 16px; font-size: 0.82rem; color: var(--color-sage); font-weight: 600; margin-bottom: 8px;">
                                 ${duration ? `<span>⏱️ Duration: ${escapeHTML(duration)}</span>` : ''}
                                 ${sessions ? `<span>📅 Sessions: ${escapeHTML(sessions)}</span>` : ''}
                             </div>
                         ` : ''}
                         ${precautions.length > 0 ? `
-                            <div style="font-size: 0.8rem; color: var(--color-amber-dark); background: var(--color-amber-light); border: 1px solid var(--color-amber-border); padding: 8px 12px; border-radius: var(--radius-sm); margin-top: 6px;">
+                            <div style="font-size: 0.8rem; color: #b45309; background: #fffbe0; padding: 8px 12px; border-radius: 8px; margin-top: 6px;">
                                 ⚠️ <strong>Precautions:</strong> ${escapeHTML(Array.isArray(precautions) ? precautions.join('; ') : precautions)}
                             </div>
                         ` : ''}
