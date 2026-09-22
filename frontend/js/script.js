@@ -2835,7 +2835,7 @@ async function sendAIChatMessage() {
 
     // Append user message
     const userMsg = document.createElement('div');
-    userMsg.style.cssText = 'align-self: flex-end; background: var(--color-sage); color: white; padding: 12px 18px; border-radius: 16px; max-width: 85%; box-shadow: var(--shadow-sm);';
+    userMsg.style.cssText = 'align-self: flex-end; background: linear-gradient(135deg, var(--color-forest) 0%, var(--color-forest-medium) 100%); color: white; padding: 12px 18px; border-radius: 14px; max-width: 85%; box-shadow: var(--shadow-xs);';
     userMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem;">${escapeHTML(prompt)}</p>`;
     messagesEl.appendChild(userMsg);
 
@@ -2846,8 +2846,8 @@ async function sendAIChatMessage() {
 
     // Loading indicator
     const botMsg = document.createElement('div');
-    botMsg.style.cssText = 'align-self: flex-start; background: white; padding: 14px 18px; border-radius: 16px; max-width: 85%; box-shadow: var(--shadow-sm); border: 1px solid var(--color-glass-border);';
-    botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-muted);">Thinking...</p>`;
+    botMsg.style.cssText = 'align-self: flex-start; background: #ffffff; padding: 14px 18px; border-radius: 14px; max-width: 85%; box-shadow: var(--shadow-xs); border: 1px solid var(--color-border-subtle);';
+    botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-muted);"><i class="fas fa-spinner fa-spin" style="margin-right: 6px;"></i> Analyzing Ayurvedic clinical knowledge...</p>`;
     messagesEl.appendChild(botMsg);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
@@ -2857,9 +2857,9 @@ async function sendAIChatMessage() {
             body: JSON.stringify({ message: prompt, userRole: currentUser ? currentUser.role : 'patient' })
         });
 
-        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap; line-height: 1.5;">${formatAIMessage(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-text-main); white-space: pre-wrap; line-height: 1.55;">${formatAIMessage(data.reply || data.response || data.message || 'I am glad to assist with your Ayurvedic wellness care.')}</p>`;
     } catch (err) {
-        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: #b91c1c;">Sorry, I encountered an issue: ${escapeHTML(err.message)}</p>`;
+        botMsg.innerHTML = `<p style="margin:0; font-size: 0.92rem; color: var(--color-error);"><i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i> ${escapeHTML(err.message)}</p>`;
     } finally {
         inputEl.disabled = false;
         if (sendBtn) sendBtn.disabled = false;
@@ -2923,19 +2923,19 @@ async function generateAITreatmentRecommendation() {
         const rec = result.data || result;
         outputEl.style.display = 'block';
 
-        let html = `<div style="background: var(--color-sand-bg); padding: 24px; border-radius: 18px; border: 1.5px solid var(--color-glass-border);">`;
+        let html = `<div style="background: var(--color-surface-subtle); padding: 22px; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-xs);">`;
         
         if (rec.isEmergency) {
             html += `<div class="alert alert-error" style="margin-bottom: 16px;">⚠️ <strong>Emergency Symptom Warning:</strong> ${escapeHTML(rec.emergencyWarning || 'Severe symptoms detected. Please seek immediate medical emergency evaluation.')}</div>`;
         } else {
             if (rec.educationalWording) {
-                html += `<p style="margin: 0 0 16px 0; font-size: 0.9rem; color: var(--color-text-muted); font-style: italic;">${escapeHTML(rec.educationalWording)}</p>`;
+                html += `<p style="margin: 0 0 16px 0; font-size: 0.875rem; color: var(--color-text-muted); font-style: italic;">${escapeHTML(rec.educationalWording)}</p>`;
             }
 
             const recList = rec.recommendations || rec.recommendedTherapies || [];
             
             if (recList.length > 0) {
-                html += `<h4 style="margin: 0 0 14px 0; color: var(--color-sage); font-weight: 700;">Recommended Ayurvedic & Panchakarma Protocols</h4>`;
+                html += `<h4 style="margin: 0 0 14px 0; color: var(--color-forest-medium); font-weight: 700; font-size: 1.05rem;">Recommended Ayurvedic & Panchakarma Protocols</h4>`;
                 
                 recList.forEach((item, idx) => {
                     const title = item.therapyName || item.name || item.therapy || `Recommendation #${idx + 1}`;
@@ -2947,21 +2947,21 @@ async function generateAITreatmentRecommendation() {
                     const precautions = item.precautions || [];
 
                     html += `
-                    <div style="background: rgba(255, 255, 255, 0.85); padding: 18px; border-radius: 14px; margin-bottom: 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="background: #ffffff; padding: 18px 20px; border-radius: var(--radius-md); margin-bottom: 14px; border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-xs);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
-                            <h5 style="margin: 0; font-size: 1.05rem; color: var(--color-forest-dark); font-weight: 700;">${escapeHTML(title)}</h5>
-                            <span class="badge badge-success" style="font-size: 0.75rem;">${escapeHTML(category)}</span>
+                            <h5 style="margin: 0; font-size: 1rem; color: var(--color-forest-deep); font-weight: 700;">${escapeHTML(title)}</h5>
+                            <span class="badge badge-success" style="font-size: 0.72rem;">${escapeHTML(category)}</span>
                         </div>
-                        ${objective ? `<p style="margin: 0 0 8px 0; font-size: 0.9rem; color: var(--color-text-main);"><strong>Objective:</strong> ${escapeHTML(objective)}</p>` : ''}
-                        ${rationale ? `<p style="margin: 0 0 8px 0; font-size: 0.88rem; color: var(--color-text-muted);"><strong>Rationale & Guidance:</strong> ${escapeHTML(rationale)}</p>` : ''}
+                        ${objective ? `<p style="margin: 0 0 8px 0; font-size: 0.875rem; color: var(--color-text-main);"><strong>Objective:</strong> ${escapeHTML(objective)}</p>` : ''}
+                        ${rationale ? `<p style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--color-text-secondary);"><strong>Rationale & Guidance:</strong> ${escapeHTML(rationale)}</p>` : ''}
                         ${(duration || sessions) ? `
-                            <div style="display: flex; gap: 16px; font-size: 0.82rem; color: var(--color-sage); font-weight: 600; margin-bottom: 8px;">
+                            <div style="display: flex; gap: 16px; font-size: 0.8125rem; color: var(--color-forest-medium); font-weight: 600; margin-bottom: 8px;">
                                 ${duration ? `<span>⏱️ Duration: ${escapeHTML(duration)}</span>` : ''}
                                 ${sessions ? `<span>📅 Sessions: ${escapeHTML(sessions)}</span>` : ''}
                             </div>
                         ` : ''}
                         ${precautions.length > 0 ? `
-                            <div style="font-size: 0.8rem; color: #b45309; background: #fffbe0; padding: 8px 12px; border-radius: 8px; margin-top: 6px;">
+                            <div style="font-size: 0.8rem; color: var(--color-amber-dark); background: var(--color-amber-light); border: 1px solid var(--color-amber-border); padding: 8px 12px; border-radius: var(--radius-sm); margin-top: 6px;">
                                 ⚠️ <strong>Precautions:</strong> ${escapeHTML(Array.isArray(precautions) ? precautions.join('; ') : precautions)}
                             </div>
                         ` : ''}
