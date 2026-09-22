@@ -19,11 +19,11 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" />
           <Stack.Screen name="login/index" />
-          <Stack.Screen name="admin/index" />
-          <Stack.Screen name="doctor/index" />
-          <Stack.Screen name="therapist/index" />
-          <Stack.Screen name="patient/index" />
-          <Stack.Screen name="receptionist/index" />
+          <Stack.Screen name="admin" />
+          <Stack.Screen name="doctor" />
+          <Stack.Screen name="therapist" />
+          <Stack.Screen name="patient" />
+          <Stack.Screen name="receptionist" />
         </Stack>
       </AuthProvider>
     </SafeAreaProvider>
