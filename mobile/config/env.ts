@@ -9,7 +9,16 @@ export const CURRENT_ENV: Environment =
 
 // Dynamically extract computer's local Wi-Fi IP address for mobile devices
 const debuggerHost = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
-const devHostIp = debuggerHost ? debuggerHost.split(':')[0] : '192.168.31.232';
+
+// Validate IPv4 format. If running via tunnel (e.g., *.exp.direct), debuggerHost is a domain,
+// which cannot connect to local port 5000. In that case, fallback to computer's Wi-Fi IP.
+const isIpv4 = (host?: string): boolean => {
+  if (!host) return false;
+  return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(host);
+};
+
+const rawHost = debuggerHost ? debuggerHost.split(':')[0] : undefined;
+const devHostIp = isIpv4(rawHost) ? rawHost! : '192.168.31.232';
 
 // Web browser uses localhost:5000, physical mobile phone uses computer Wi-Fi IP
 const defaultDevUrl =
