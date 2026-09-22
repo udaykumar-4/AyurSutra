@@ -18,10 +18,10 @@ const isIpv4 = (host?: string): boolean => {
 };
 
 const rawHost = debuggerHost ? debuggerHost.split(':')[0] : undefined;
-const hostIp = isIpv4(rawHost) ? rawHost! : '192.168.31.232';
+const hostIp = isIpv4(rawHost) ? rawHost! : '10.159.127.240';
 
 // Web browser uses localhost:5000
-// Mobile devices use computer Wi-Fi IP (192.168.31.232:5000)
+// Mobile devices use computer Wi-Fi / Hotspot IP (10.159.127.240:5000)
 const defaultDevUrl =
   Platform.OS === 'web'
     ? 'http://localhost:5000/api'
