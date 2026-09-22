@@ -18,13 +18,15 @@ const isIpv4 = (host?: string): boolean => {
 };
 
 const rawHost = debuggerHost ? debuggerHost.split(':')[0] : undefined;
-const devHostIp = isIpv4(rawHost) ? rawHost! : '192.168.31.232';
+const tunnelApiUrl = 'https://salty-cars-talk.loca.lt/api';
 
-// Web browser uses localhost:5000, physical mobile phone uses computer Wi-Fi IP
+// Web browser uses localhost:5000
+// Physical phone on LAN uses computer Wi-Fi IP (192.168.31.232:5000)
+// Physical phone over Expo tunnel uses public tunnel API URL
 const defaultDevUrl =
   Platform.OS === 'web'
     ? 'http://localhost:5000/api'
-    : `http://${devHostIp}:5000/api`;
+    : (isIpv4(rawHost) ? `http://${rawHost}:5000/api` : tunnelApiUrl);
 
 const ENV_CONFIG = {
   development: {
