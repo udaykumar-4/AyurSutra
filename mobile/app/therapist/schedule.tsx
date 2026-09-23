@@ -142,7 +142,7 @@ export default function TherapistScheduleScreen() {
             <Card key={item._id} style={styles.apptCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>
-                  👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
+                  👤 {(item.patientId && typeof item.patientId === 'object') ? item.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={[styles.statusBadge, getStatusStyle(item.status)]}>
                   {item.status.toUpperCase()}
@@ -154,7 +154,7 @@ export default function TherapistScheduleScreen() {
                 📅 Date & Time: {new Date(item.appointment_date).toLocaleDateString()} at {item.appointment_time}
               </Text>
               <Text style={styles.itemDetail}>
-                Prescribing Doctor: {typeof item.doctorId === 'object' ? item.doctorId.full_name : 'Doctor'}
+                Prescribing Doctor: {(item.doctorId && typeof item.doctorId === 'object') ? item.doctorId.full_name : 'Doctor'}
               </Text>
 
               {/* Status Action Buttons */}

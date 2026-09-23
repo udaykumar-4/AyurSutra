@@ -107,8 +107,8 @@ export default function TherapistTreatmentsScreen() {
           </Card>
         ) : (
           prescriptions.map((rx) => {
-            const pName = typeof rx.patientId === 'object' ? rx.patientId.full_name : 'Patient';
-            const docName = typeof rx.doctorId === 'object' ? rx.doctorId.full_name : 'Prescribing Doctor';
+            const pName = (rx.patientId && typeof rx.patientId === 'object') ? rx.patientId.full_name : 'Patient';
+            const docName = (rx.doctorId && typeof rx.doctorId === 'object') ? rx.doctorId.full_name : 'Prescribing Doctor';
             const isFinished = rx.progressCompleted >= rx.duration;
 
             return (

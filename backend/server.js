@@ -49,8 +49,8 @@ mongoose.connect(MONGO_URI)
   .then(async () => {
     console.log('Connected to MongoDB');
     await seedDemoUsers();
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT} (0.0.0.0)`);
     });
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {

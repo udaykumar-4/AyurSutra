@@ -33,8 +33,7 @@
           "imageWidth": 120
         }
       ],
-      "expo-secure-store",
-      "expo-notifications"
+      "expo-secure-store"
     ]
   }
 }

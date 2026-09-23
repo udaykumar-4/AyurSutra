@@ -125,14 +125,14 @@ export default function PatientTreatmentScreen() {
                 <View style={styles.gridItem}>
                   <Text style={styles.gridLabel}>👨‍⚕️ Prescribing Doctor</Text>
                   <Text style={styles.gridValue}>
-                    {typeof activeRx.doctorId === 'object' ? activeRx.doctorId.full_name : 'Doctor'}
+                    {(activeRx.doctorId && typeof activeRx.doctorId === 'object') ? activeRx.doctorId.full_name : 'Doctor'}
                   </Text>
                 </View>
 
                 <View style={styles.gridItem}>
                   <Text style={styles.gridLabel}>🧘 Primary Therapist</Text>
                   <Text style={styles.gridValue}>
-                    {typeof activeRx.therapistId === 'object' ? activeRx.therapistId.full_name : 'Therapist'}
+                    {(activeRx.therapistId && typeof activeRx.therapistId === 'object') ? activeRx.therapistId.full_name : 'Therapist'}
                   </Text>
                 </View>
 
@@ -171,7 +171,7 @@ export default function PatientTreatmentScreen() {
                 <Card key={noteItem._id} style={styles.noteCard}>
                   <View style={styles.noteHeader}>
                     <Text style={styles.authorText}>
-                      📝 {typeof noteItem.authorId === 'object' ? `${noteItem.authorId.full_name}` : 'Medical Provider'}
+                      📝 {(noteItem.authorId && typeof noteItem.authorId === 'object') ? `${noteItem.authorId.full_name}` : 'Medical Provider'}
                     </Text>
                     {noteItem.createdAt && (
                       <Text style={styles.dateText}>

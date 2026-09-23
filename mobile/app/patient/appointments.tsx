@@ -186,14 +186,14 @@ export default function PatientAppointmentsScreen() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>👨‍⚕️ Doctor:</Text>
                   <Text style={styles.infoValue}>
-                    {typeof item.doctorId === 'object' ? item.doctorId.full_name : 'Assigned Doctor'}
+                    {(item.doctorId && typeof item.doctorId === 'object') ? item.doctorId.full_name : 'Assigned Doctor'}
                   </Text>
                 </View>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>🧘 Therapist:</Text>
                   <Text style={styles.infoValue}>
-                    {typeof item.therapistId === 'object' ? item.therapistId.full_name : 'Assigned Therapist'}
+                    {(item.therapistId && typeof item.therapistId === 'object') ? item.therapistId.full_name : 'Assigned Therapist'}
                   </Text>
                 </View>
 
@@ -243,10 +243,10 @@ export default function PatientAppointmentsScreen() {
                 </Text>
                 <Text style={styles.modalDetail}>Time: {selectedAppt.appointment_time}</Text>
                 <Text style={styles.modalDetail}>
-                  Doctor: {typeof selectedAppt.doctorId === 'object' ? selectedAppt.doctorId.full_name : 'N/A'}
+                  Doctor: {(selectedAppt.doctorId && typeof selectedAppt.doctorId === 'object') ? selectedAppt.doctorId.full_name : 'N/A'}
                 </Text>
                 <Text style={styles.modalDetail}>
-                  Therapist: {typeof selectedAppt.therapistId === 'object' ? selectedAppt.therapistId.full_name : 'N/A'}
+                  Therapist: {(selectedAppt.therapistId && typeof selectedAppt.therapistId === 'object') ? selectedAppt.therapistId.full_name : 'N/A'}
                 </Text>
                 <Text style={styles.modalDetail}>Cost: ₹{selectedAppt.cost || 1500}</Text>
                 <Text style={styles.modalDetail}>Payment Status: {selectedAppt.isPaid ? 'Paid' : 'Unpaid'}</Text>

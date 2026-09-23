@@ -163,10 +163,10 @@ export default function DoctorPrescriptionsScreen() {
               </View>
 
               <Text style={styles.detailText}>
-                👤 Patient: {typeof rx.patientId === 'object' ? rx.patientId.full_name : 'Patient'}
+                👤 Patient: {(rx.patientId && typeof rx.patientId === 'object') ? rx.patientId.full_name : 'Patient'}
               </Text>
               <Text style={styles.detailText}>
-                🧘 Therapist: {typeof rx.therapistId === 'object' ? rx.therapistId.full_name : 'Therapist'}
+                🧘 Therapist: {(rx.therapistId && typeof rx.therapistId === 'object') ? rx.therapistId.full_name : 'Therapist'}
               </Text>
 
               <ProgressBar

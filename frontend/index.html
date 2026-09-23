@@ -608,6 +608,7 @@
                 <button class="nav-tab active" onclick="showTab(event, 'therapistSessions')">Today's Sessions</button>
                 <button class="nav-tab" onclick="showTab(event, 'therapistPatients')">My Assigned Patients</button>
                 <button class="nav-tab" onclick="showTab(event, 'therapistProgress')">Treatment Progress</button>
+                <button class="nav-tab" onclick="showTab(event, 'therapistFeedbackTab')">Patient Feedback</button>
             </div>
 
             <div class="tab-content active" id="therapistSessions">
@@ -663,6 +664,13 @@
                     <textarea id="progressNote" placeholder="Enter treatment notes, patient response, and observations..." style="min-height: 120px;"></textarea>
                 </div>
                 <button class="btn btn-small" onclick="saveProgressNote()">💾 Save Progress Note</button>
+            </div>
+
+            <div class="tab-content" id="therapistFeedbackTab">
+                <h3>Patient Feedback & Reviews</h3>
+                <div id="therapistFeedbackDisplay" style="margin-top: 20px;">
+                    <p>Loading patient feedback...</p>
+                </div>
             </div>
 
         </div>
@@ -819,9 +827,8 @@
                 
                 <h4 style="margin-top: 30px;">Health Reports & Documents</h4>
                 <button class="btn btn-small" onclick="showUploadModal()" style="margin: 15px 0;">📎 Upload New Report</button>
-                <div style="background: rgba(255, 243, 205, 0.3); padding: 20px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #ffc107;">
-                    <p><strong>(Sample) 📋 Blood Test:</strong> All parameters normal. <a href="#">Download</a></p>
-                    <small style="color: #6c757d;">Uploaded on Aug 28, 2025</small>
+                <div id="patientDocumentsList" style="margin: 10px 0;">
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">No documents uploaded yet.</p>
                 </div>
 
                 <h4 style="margin-top: 30px;">Vital Signs Tracking 

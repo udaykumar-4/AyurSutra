@@ -223,7 +223,7 @@ export default function ReceptionistAppointmentsScreen() {
             <Card key={item._id} style={styles.apptCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>
-                  👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
+                  👤 {(item.patientId && typeof item.patientId === 'object') ? item.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={[styles.statusBadge, getStatusStyle(item.status)]}>
                   {item.status.toUpperCase()}
@@ -235,10 +235,10 @@ export default function ReceptionistAppointmentsScreen() {
                 📅 Date & Time: {new Date(item.appointment_date).toLocaleDateString()} at {item.appointment_time}
               </Text>
               <Text style={styles.itemDetail}>
-                👨‍⚕️ Doctor: {typeof item.doctorId === 'object' ? item.doctorId.full_name : 'N/A'}
+                👨‍⚕️ Doctor: {(item.doctorId && typeof item.doctorId === 'object') ? item.doctorId.full_name : 'N/A'}
               </Text>
               <Text style={styles.itemDetail}>
-                🧘 Therapist: {typeof item.therapistId === 'object' ? item.therapistId.full_name : 'N/A'}
+                🧘 Therapist: {(item.therapistId && typeof item.therapistId === 'object') ? item.therapistId.full_name : 'N/A'}
               </Text>
 
               {/* Payment & Status Control Actions */}

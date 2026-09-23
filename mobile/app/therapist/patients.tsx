@@ -87,7 +87,7 @@ export default function TherapistPatientsScreen() {
   const handleOpenPatientDetails = async (rx: Prescription) => {
     setSelectedRx(rx);
     setChartLoading(true);
-    const pId = typeof rx.patientId === 'object' ? rx.patientId._id : rx.patientId;
+    const pId = (rx.patientId && typeof rx.patientId === 'object') ? rx.patientId._id : rx.patientId;
 
     try {
       const [appts, notesData] = await Promise.all([
@@ -109,7 +109,7 @@ export default function TherapistPatientsScreen() {
       return;
     }
 
-    const pId = typeof selectedRx.patientId === 'object' ? selectedRx.patientId._id : selectedRx.patientId;
+    const pId = (selectedRx.patientId && typeof selectedRx.patientId === 'object') ? selectedRx.patientId._id : selectedRx.patientId;
 
     setSavingNote(true);
     try {
@@ -154,8 +154,8 @@ export default function TherapistPatientsScreen() {
           </Card>
         ) : (
           prescriptions.map((rx) => {
-            const pName = typeof rx.patientId === 'object' ? rx.patientId.full_name : 'Patient';
-            const docName = typeof rx.doctorId === 'object' ? rx.doctorId.full_name : 'Prescribing Doctor';
+            const pName = (rx.patientId && typeof rx.patientId === 'object') ? rx.patientId.full_name : 'Patient';
+            const docName = (rx.doctorId && typeof rx.doctorId === 'object') ? rx.doctorId.full_name : 'Prescribing Doctor';
             const remaining = Math.max(0, rx.duration - rx.progressCompleted);
 
             return (
@@ -205,7 +205,7 @@ export default function TherapistPatientsScreen() {
               <View style={styles.modalHeader}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.modalTitle}>
-                    👤 {typeof selectedRx.patientId === 'object' ? selectedRx.patientId.full_name : 'Patient'}
+                    👤 {(selectedRx.patientId && typeof selectedRx.patientId === 'object') ? selectedRx.patientId.full_name : 'Patient'}
                   </Text>
                   <Text style={styles.modalSub}>Assigned Therapy Chart</Text>
                 </View>
@@ -223,7 +223,7 @@ export default function TherapistPatientsScreen() {
                     <Text style={styles.chartSectionTitle}>🌿 Treatment & Protocol Details</Text>
                     <Text style={styles.chartText}>Treatment Name: {selectedRx.treatment}</Text>
                     <Text style={styles.chartText}>
-                      Doctor: {typeof selectedRx.doctorId === 'object' ? selectedRx.doctorId.full_name : 'Prescribing Doctor'}
+                      Doctor: {(selectedRx.doctorId && typeof selectedRx.doctorId === 'object') ? selectedRx.doctorId.full_name : 'Prescribing Doctor'}
                     </Text>
                     <Text style={styles.chartText}>Status: {selectedRx.status.toUpperCase()}</Text>
 
@@ -276,7 +276,7 @@ export default function TherapistPatientsScreen() {
                       patientNotes.map((note) => (
                         <View key={note._id} style={styles.noteRow}>
                           <Text style={styles.noteAuthor}>
-                            {typeof note.authorId === 'object' ? `${note.authorId.full_name} (${note.authorId.role})` : 'Staff'}
+                            {(note.authorId && typeof note.authorId === 'object') ? `${note.authorId.full_name} (${note.authorId.role})` : 'Staff'}
                           </Text>
                           <Text style={styles.noteBody}>{note.note}</Text>
                         </View>

@@ -266,7 +266,7 @@ export default function DoctorPatientsScreen() {
                             label={`Sessions: ${rx.progressCompleted} / ${rx.duration}`}
                           />
                           <Text style={styles.rxSub}>
-                            Therapist: {typeof rx.therapistId === 'object' ? rx.therapistId.full_name : 'Therapist'}
+                            Therapist: {(rx.therapistId && typeof rx.therapistId === 'object') ? rx.therapistId.full_name : 'Therapist'}
                           </Text>
                         </View>
                       ))
@@ -298,7 +298,7 @@ export default function DoctorPatientsScreen() {
                       patientNotes.map((note) => (
                         <View key={note._id} style={styles.noteRow}>
                           <Text style={styles.noteAuthor}>
-                            {typeof note.authorId === 'object' ? `${note.authorId.full_name} (${note.authorId.role})` : 'Staff'}
+                            {(note.authorId && typeof note.authorId === 'object') ? `${note.authorId.full_name} (${note.authorId.role})` : 'Staff'}
                           </Text>
                           <Text style={styles.noteBody}>{note.note}</Text>
                         </View>

@@ -13,6 +13,7 @@ const analyticsRoutes = require('./analyticsRoutes');
 const schedulingRoutes = require('./schedulingRoutes');
 const aiRoutes = require('./aiRoutes');
 const patientTreatmentRecommendationRoutes = require('./patientTreatmentRecommendationRoutes');
+const documentRoutes = require('./documentRoutes');
 
 // Tell the router to use these files for specific paths
 router.use('/auth', authRoutes);
@@ -21,6 +22,7 @@ router.use('/appointments', appointmentRoutes);
 router.use('/prescriptions', prescriptionRoutes);
 router.use('/notes', noteRoutes);
 router.use('/reports', reportRoutes);
+router.use('/documents', documentRoutes);
 router.use('/feedback', feedbackRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/scheduling', schedulingRoutes);

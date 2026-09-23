@@ -237,7 +237,7 @@ export default function ReceptionistPatientsScreen() {
                           📅 {new Date(appt.appointment_date).toLocaleDateString()} at {appt.appointment_time} — {appt.treatment} ({appt.status})
                         </Text>
                         <Text style={styles.apptSub}>
-                          Doctor: {typeof appt.doctorId === 'object' ? appt.doctorId.full_name : 'N/A'} • Therapist: {typeof appt.therapistId === 'object' ? appt.therapistId.full_name : 'N/A'}
+                          Doctor: {(appt.doctorId && typeof appt.doctorId === 'object') ? appt.doctorId.full_name : 'N/A'} • Therapist: {(appt.therapistId && typeof appt.therapistId === 'object') ? appt.therapistId.full_name : 'N/A'}
                         </Text>
                       </View>
                     ))

@@ -163,7 +163,7 @@ export default function ReceptionistPaymentsScreen() {
             <Card key={item._id} style={styles.billCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>
-                  👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
+                  👤 {(item.patientId && typeof item.patientId === 'object') ? item.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={[styles.costBadge, { color: item.isPaid ? Colors.success : (item.status === 'cancelled' ? Colors.textSecondary : Colors.warning) }]}>
                   ₹{item.cost || 1500}
@@ -175,7 +175,7 @@ export default function ReceptionistPaymentsScreen() {
                 📅 Date & Time: {new Date(item.appointment_date).toLocaleDateString()} at {item.appointment_time}
               </Text>
               <Text style={styles.itemDetail}>
-                Doctor: {typeof item.doctorId === 'object' ? item.doctorId.full_name : 'N/A'}
+                Doctor: {(item.doctorId && typeof item.doctorId === 'object') ? item.doctorId.full_name : 'N/A'}
               </Text>
 
               <View style={styles.cardFooter}>

@@ -171,14 +171,14 @@ export default function ReceptionistDashboardScreen() {
             <Card key={item._id} style={styles.todayCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>
-                  👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
+                  👤 {(item.patientId && typeof item.patientId === 'object') ? item.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={styles.timeBadge}>{item.appointment_time}</Text>
               </View>
               <Text style={styles.cardDetail}>Treatment: {item.treatment}</Text>
               <View style={styles.cardFooter}>
                 <Text style={styles.docText}>
-                  Doctor: {typeof item.doctorId === 'object' ? item.doctorId.full_name : 'N/A'}
+                  Doctor: {(item.doctorId && typeof item.doctorId === 'object') ? item.doctorId.full_name : 'N/A'}
                 </Text>
                 <Text style={[styles.paidText, { color: item.isPaid ? Colors.success : Colors.warning }]}>
                   {item.isPaid ? 'PAID' : 'UNPAID'}
@@ -205,7 +205,7 @@ export default function ReceptionistDashboardScreen() {
             <Card key={item._id} style={styles.unpaidCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.unpaidPatient}>
-                  👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
+                  👤 {(item.patientId && typeof item.patientId === 'object') ? item.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={styles.costBadge}>₹{item.cost || 1500}</Text>
               </View>

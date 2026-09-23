@@ -149,7 +149,7 @@ export default function DoctorDashboardScreen() {
             <Card key={item._id} style={styles.todayCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>
-                  👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
+                  👤 {(item.patientId && typeof item.patientId === 'object') ? item.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={styles.timeBadge}>{item.appointment_time}</Text>
               </View>
@@ -172,7 +172,7 @@ export default function DoctorDashboardScreen() {
             <Card key={item._id} style={styles.upcomingCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientNameSmall}>
-                  👤 {typeof item.patientId === 'object' ? item.patientId.full_name : 'Patient'}
+                  👤 {(item.patientId && typeof item.patientId === 'object') ? item.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={styles.dateBadge}>
                   {new Date(item.appointment_date).toLocaleDateString()} at {item.appointment_time}
@@ -199,7 +199,7 @@ export default function DoctorDashboardScreen() {
             <Card key={fb._id} style={styles.feedbackCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.feedbackAuthor}>
-                  👤 {typeof fb.patientId === 'object' ? fb.patientId.full_name : 'Patient'}
+                  👤 {(fb.patientId && typeof fb.patientId === 'object') ? fb.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={styles.starText}>★ {fb.doctorRating || fb.overallRating} / 5</Text>
               </View>

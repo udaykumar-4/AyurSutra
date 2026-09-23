@@ -186,7 +186,7 @@ export default function TherapistProfileScreen() {
                 <Card key={fb._id} style={styles.fbCard}>
                   <View style={styles.cardHeader}>
                     <Text style={styles.patientName}>
-                      👤 {typeof fb.patientId === 'object' ? fb.patientId.full_name : 'Patient'}
+                      👤 {(fb.patientId && typeof fb.patientId === 'object') ? fb.patientId.full_name : 'Patient'}
                     </Text>
                     <Text style={styles.ratingBadge}>★ {fb.therapistRating || fb.overallRating} / 5</Text>
                   </View>

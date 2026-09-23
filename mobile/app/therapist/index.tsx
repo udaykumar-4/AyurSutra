@@ -84,7 +84,7 @@ export default function TherapistHomeScreen() {
   const completedTreatments = prescriptions.filter((p) => p.status === 'completed');
 
   // Stats calculation
-  const totalAssignedPatients = new Set(prescriptions.map((p) => typeof p.patientId === 'object' ? p.patientId._id : p.patientId)).size;
+  const totalAssignedPatients = new Set(prescriptions.map((p) => (p.patientId && typeof p.patientId === 'object') ? p.patientId._id : p.patientId)).size;
   const completedSessionsToday = todaySessions.filter((s) => s.status === 'completed').length;
   const pendingSessionsToday = todaySessions.length - completedSessionsToday;
 
@@ -143,7 +143,7 @@ export default function TherapistHomeScreen() {
             <Card key={session._id} style={styles.todayCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>
-                  👤 {typeof session.patientId === 'object' ? session.patientId.full_name : 'Patient'}
+                  👤 {(session.patientId && typeof session.patientId === 'object') ? session.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={styles.timeBadge}>{session.appointment_time}</Text>
               </View>
@@ -167,7 +167,7 @@ export default function TherapistHomeScreen() {
             <Card key={session._id} style={styles.upcomingCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientNameSmall}>
-                  👤 {typeof session.patientId === 'object' ? session.patientId.full_name : 'Patient'}
+                  👤 {(session.patientId && typeof session.patientId === 'object') ? session.patientId.full_name : 'Patient'}
                 </Text>
                 <Text style={styles.dateBadge}>
                   📅 {new Date(session.appointment_date).toLocaleDateString()} at {session.appointment_time}
@@ -198,10 +198,10 @@ export default function TherapistHomeScreen() {
                 <Text style={styles.rxProgressText}>{rx.progressCompleted} / {rx.duration} sessions</Text>
               </View>
               <Text style={styles.rxPatient}>
-                Patient: {typeof rx.patientId === 'object' ? rx.patientId.full_name : 'Patient'}
+                Patient: {(rx.patientId && typeof rx.patientId === 'object') ? rx.patientId.full_name : 'Patient'}
               </Text>
               <Text style={styles.rxDoctor}>
-                Doctor: {typeof rx.doctorId === 'object' ? rx.doctorId.full_name : 'Prescribing Doctor'}
+                Doctor: {(rx.doctorId && typeof rx.doctorId === 'object') ? rx.doctorId.full_name : 'Prescribing Doctor'}
               </Text>
             </Card>
           ))

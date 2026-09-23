@@ -324,6 +324,7 @@ function showDashboard(role) {
         loadPatientPayments();
         loadFeedbackForm();
         loadPatientOutcomeAnalytics();
+        loadPatientDocuments();
     } else if (role === 'receptionist') {
         document.getElementById('receptionistName').textContent = currentUser.full_name;
         document.getElementById('receptionistAvatar').textContent = currentUser.full_name.charAt(0).toUpperCase();
@@ -2048,6 +2049,45 @@ async function uploadReport(event) {
     } catch (error) {
         console.error(error);
         showNotification('Error', 'Upload failed: ' + error.message, 'error');
+    }
+}
+
+async function loadPatientDocuments() {
+    const container = document.getElementById('patientDocumentsList');
+    if (!container) return;
+
+    try {
+        const documents = await authFetch(`${API_URL}/documents?patientId=${currentUser._id}`);
+        if (!documents || documents.length === 0) {
+            container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 0.9rem; padding: 12px 0;">No health documents uploaded yet.</p>`;
+            return;
+        }
+
+        container.innerHTML = documents.map(doc => `
+            <div style="background: rgba(255, 255, 255, 0.9); padding: 16px; border-radius: 12px; margin: 10px 0; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <p style="margin: 0; font-weight: 700; color: #1e293b;">📄 ${escapeHTML(doc.name)} <span class="badge badge-info" style="font-size: 0.75rem; margin-left: 8px;">${escapeHTML(doc.type || 'Document')}</span></p>
+                    <small style="color: var(--color-text-muted);">Uploaded on ${formatDate(doc.createdAt)}</small>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <a href="${doc.fileData}" download="${escapeHTML(doc.name)}" class="btn btn-small" style="text-decoration: none; padding: 6px 12px; font-size: 0.8rem; background: var(--color-sage); color: white;">⬇️ Download</a>
+                    <button class="btn btn-small" style="background: #ef4444; padding: 6px 12px; font-size: 0.8rem;" onclick="deletePatientDocument('${doc._id}')">🗑️ Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = `<p style="color: #ef4444; font-size: 0.85rem;">Failed to load documents: ${escapeHTML(err.message)}</p>`;
+    }
+}
+
+async function deletePatientDocument(id) {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+    try {
+        await authFetch(`${API_URL}/documents/${id}`, { method: 'DELETE' });
+        showNotification('Success', 'Document deleted successfully.');
+        loadPatientDocuments();
+    } catch (err) {
+        showNotification('Error', 'Failed to delete document: ' + err.message, 'error');
     }
 }
 

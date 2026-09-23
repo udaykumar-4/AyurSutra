@@ -70,7 +70,7 @@ export default function PatientReportScreen() {
   }
 
   const patient = reportData?.user || user;
-  const docName = patient?.assignedDoctor && typeof patient.assignedDoctor === 'object' ? patient.assignedDoctor.full_name : 'Assigned Doctor N/A';
+  const docName = patient?.assignedDoctor && (patient.assignedDoctor && typeof patient.assignedDoctor === 'object') ? patient.assignedDoctor.full_name : 'Assigned Doctor N/A';
 
   return (
     <View style={styles.container}>
@@ -196,7 +196,7 @@ export default function PatientReportScreen() {
             reportData.notes.map((note) => (
               <View key={note._id} style={styles.historyRow}>
                 <Text style={styles.noteAuthor}>
-                  ✍️ {typeof note.authorId === 'object' ? `${note.authorId.full_name} (${note.authorId.role})` : 'Author'}
+                  ✍️ {(note.authorId && typeof note.authorId === 'object') ? `${note.authorId.full_name} (${note.authorId.role})` : 'Author'}
                 </Text>
                 <Text style={styles.noteBody}>{note.note}</Text>
               </View>

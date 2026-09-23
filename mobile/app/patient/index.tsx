@@ -63,7 +63,7 @@ export default function PatientHomeScreen() {
 
       // Fetch assigned doctor if exists
       if (user.assignedDoctor) {
-        const docId = typeof user.assignedDoctor === 'object' ? user.assignedDoctor._id : user.assignedDoctor;
+        const docId = (user.assignedDoctor && typeof user.assignedDoctor === 'object') ? user.assignedDoctor._id : user.assignedDoctor;
         if (docId) {
           try {
             const doc = await userService.getUserById(docId);
@@ -103,8 +103,8 @@ export default function PatientHomeScreen() {
   const upcomingAppts = filterUpcomingAppointments(appointments, true);
 
   const activeRx = prescriptions.find((p) => p.status === 'in-progress') || prescriptions[0];
-  const therapistName = activeRx && typeof activeRx.therapistId === 'object' ? activeRx.therapistId.full_name : 'Assigned Therapist';
-  const doctorName = activeRx && typeof activeRx.doctorId === 'object' ? activeRx.doctorId.full_name : (assignedDoctor?.full_name || 'Assigned Doctor');
+  const therapistName = activeRx && (activeRx.therapistId && typeof activeRx.therapistId === 'object') ? activeRx.therapistId.full_name : 'Assigned Therapist';
+  const doctorName = activeRx && (activeRx.doctorId && typeof activeRx.doctorId === 'object') ? activeRx.doctorId.full_name : (assignedDoctor?.full_name || 'Assigned Doctor');
 
   return (
     <View style={styles.container}>
